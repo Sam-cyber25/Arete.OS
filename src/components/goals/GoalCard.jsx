@@ -208,7 +208,7 @@ const GoalCard = memo(function GoalCard({ goal }) {
                     style={{
                       fontSize: '15px',
                       color:    st.completed ? 'var(--muted)' : 'var(--text)',
-                      opacity:  st.completed ? 0.35 : 1,
+                      opacity:  st.completed ? 0.55 : 1,
                     }}
                   >
                     {st.title}

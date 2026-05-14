@@ -42,7 +42,7 @@ export default function GoalsPage() {
         </div>
 
         <div className="flex items-center gap-4">
-          <p className="font-mono" style={{ fontSize: '11px', color: 'var(--faint)' }}>
+          <p className="font-mono" style={{ fontSize: '11px', color: 'var(--muted)' }}>
             {activeGoals} active
           </p>
           {tab === 'goals' && (
@@ -65,7 +65,7 @@ export default function GoalsPage() {
             style={{
               fontSize:      '10px',
               letterSpacing: '0.2em',
-              color:         tab === t.id ? 'var(--gold)' : 'var(--faint)',
+              color:         tab === t.id ? 'var(--gold)' : 'var(--muted)',
               paddingBottom: 12,
               borderBottom:  tab === t.id ? '1px solid var(--gold)' : '1px solid transparent',
             }}

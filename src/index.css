@@ -153,6 +153,15 @@ input:focus, textarea:focus, select:focus { outline: none; }
 }
 .btn-ghost:hover { color: var(--text); }
 
+/* Toggle links — "Show Completed", "Hide Completed", etc. */
+.toggle-link {
+  color: var(--gold);
+  opacity: 1;
+  transition: text-decoration 150ms ease, opacity 150ms ease;
+  text-decoration: none;
+}
+.toggle-link:hover { text-decoration: underline; opacity: 0.85; }
+
 .btn-danger {
   background: transparent;
   border: 1px solid var(--border);

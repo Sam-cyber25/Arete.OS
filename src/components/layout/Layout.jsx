@@ -2,6 +2,7 @@ import Sidebar              from './Sidebar'
 import Header               from './Header'
 import BottomNav            from './BottomNav'
 import OrnamentalBackground from './OrnamentalBackground'
+import IdolBackground       from './IdolBackground'
 import { useIsMobile }      from '../../hooks/useIsMobile'
 import { useApp }           from '../../context/AppContext'
 
@@ -19,6 +20,7 @@ export default function Layout({ children }) {
       style={{ background: 'var(--bg)' }}
     >
       <OrnamentalBackground />
+      <IdolBackground />
 
       {/* Desktop sidebar — hidden on mobile */}
       {!isMobile && <Sidebar />}

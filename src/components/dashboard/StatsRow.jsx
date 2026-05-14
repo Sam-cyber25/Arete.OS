@@ -12,7 +12,7 @@ function StatCard({ label, value, delay }) {
     >
       <span
         className="font-mono"
-        style={{ fontSize: '36px', color: 'var(--gold)', lineHeight: 1, marginBottom: 10 }}
+        style={{ fontSize: '36px', color: '#E8DFC8', lineHeight: 1, marginBottom: 10 }}
       >
         {value}
       </span>

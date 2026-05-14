@@ -40,14 +40,14 @@ export default function GoalSnapshot() {
               </p>
               <span
                 className="font-mono"
-                style={{ fontSize: '12px', color: 'var(--muted)', flexShrink: 0, marginLeft: 12 }}
+                style={{ fontSize: '12px', color: '#E8DFC8', flexShrink: 0, marginLeft: 12 }}
               >
                 {goal.progress}%
               </span>
             </div>
             <p
               className="font-cinzel uppercase mb-2"
-              style={{ fontSize: '9px', color: 'var(--faint)', letterSpacing: '0.16em' }}
+              style={{ fontSize: '9px', color: 'var(--muted)', letterSpacing: '0.16em' }}
             >
               {goal.category}
             </p>

@@ -20,7 +20,7 @@ const TaskItem = memo(function TaskItem({ task }) {
     <motion.div
       layout
       initial={{ opacity: 0 }}
-      animate={{ opacity: task.completed ? 0.45 : 1 }}
+      animate={{ opacity: task.completed ? 0.55 : 1 }}
       exit={{ opacity: 0, height: 0 }}
       transition={{ duration: 0.2 }}
       className="flex items-center gap-4 group"
@@ -41,10 +41,10 @@ const TaskItem = memo(function TaskItem({ task }) {
       <span
         className="font-cinzel uppercase flex-shrink-0"
         style={{
-          fontSize: '8px',
-          letterSpacing: '0.14em',
-          color: task.priority === 'high'   ? 'var(--danger)'  :
-                 task.priority === 'medium' ? 'var(--bronze)'  : 'var(--success)',
+          fontSize: '9px',
+          letterSpacing: '0.15em',
+          color: task.priority === 'high'   ? '#E8A87C' :
+                 task.priority === 'medium' ? '#A8C4A0' : '#8AACCF',
         }}
       >
         {task.priority}
@@ -54,7 +54,7 @@ const TaskItem = memo(function TaskItem({ task }) {
       {task.dueDate && (
         <span
           className="font-mono flex-shrink-0"
-          style={{ fontSize: '10px', color: 'var(--faint)' }}
+          style={{ fontSize: '10px', color: 'var(--muted)' }}
         >
           {format(new Date(task.dueDate), 'MMM d')}
         </span>

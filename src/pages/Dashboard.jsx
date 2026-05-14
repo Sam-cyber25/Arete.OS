@@ -1,5 +1,6 @@
 import { motion }         from 'framer-motion'
 import QuoteHero          from '../components/dashboard/QuoteHero'
+import VoiceOfAncients    from '../components/dashboard/VoiceOfAncients'
 import StatsRow           from '../components/dashboard/StatsRow'
 import GoalSnapshot       from '../components/dashboard/GoalSnapshot'
 import SchedulePreview    from '../components/dashboard/SchedulePreview'
@@ -39,6 +40,11 @@ export default function Dashboard() {
           <JournalStreak />
         </div>
       )}
+
+      <OrnamentalDivider opacity={0.15} />
+
+      {/* Voice of the Ancients */}
+      <VoiceOfAncients />
 
       <OrnamentalDivider opacity={0.15} />
 

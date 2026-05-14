@@ -153,10 +153,10 @@ export default function TaskList() {
         <div>
           <button
             onClick={() => setShowDone((p) => !p)}
-            className="font-cinzel uppercase transition-colors"
+            className="font-cinzel uppercase toggle-link"
             style={{
               fontSize: '9px', letterSpacing: '0.18em',
-              color: 'var(--faint)', marginBottom: 12,
+              color: 'var(--gold)', marginBottom: 12,
             }}
           >
             {showDone ? 'Hide' : 'Show'} Completed ({filteredDone.length})
