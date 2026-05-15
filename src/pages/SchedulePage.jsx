@@ -131,11 +131,45 @@ function MobileDayStrip({ days, selected, onSelect, events }) {
   )
 }
 
+// ── Column-aware overlap layout ────────────────────────────────
+// Uses interval scheduling: assigns each event to the first column
+// where it doesn't temporally overlap the previous event.
+function assignColumns(evts) {
+  const sorted    = [...evts].sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
+  const colEndMin = [] // end-minute of last event in each column
+
+  return sorted.map((ev) => {
+    const start    = new Date(ev.startTime)
+    const startMin = start.getHours() * 60 + start.getMinutes()
+    const endMin   = startMin + ev.duration
+    const top      = ((startMin - START_H * 60) / 60) * HOUR_H
+    const height   = (ev.duration / 60) * HOUR_H
+
+    let col = colEndMin.findIndex((e) => e <= startMin)
+    if (col === -1) { col = colEndMin.length; colEndMin.push(endMin) }
+    else            { colEndMin[col] = endMin }
+
+    return { ...ev, _top: top, _height: Math.max(height, 48), _col: col, _startMin: startMin, _endMin: endMin }
+  })
+}
+
 // ── Event block on timeline ───────────────────────────────────
-function TimelineEvent({ event, onDelete }) {
+// totalCols prop controls side-by-side column width
+const LABEL_W = 64 // px — matches left-16 Tailwind
+
+function TimelineEvent({ event, totalCols, onDelete }) {
   const [hovered, setHovered] = useState(false)
   const color = catColor(event.category)
   const label = catLabel(event.category)
+  const col   = event._col || 0
+
+  // Compute left/right so events share the space fairly
+  const leftExpr  = totalCols === 1
+    ? `${LABEL_W}px`
+    : `calc(${LABEL_W}px + (100% - ${LABEL_W}px) * ${col} / ${totalCols})`
+  const rightExpr = totalCols === 1
+    ? '0px'
+    : `calc((100% - ${LABEL_W}px) * ${totalCols - col - 1} / ${totalCols})`
 
   return (
     <div
@@ -143,24 +177,28 @@ function TimelineEvent({ event, onDelete }) {
       onMouseLeave={() => setHovered(false)}
       onTouchStart={() => setHovered(true)}
       onTouchEnd={() => setTimeout(() => setHovered(false), 1500)}
-      className="absolute left-16 right-0 transition-colors"
+      className="absolute transition-colors"
       style={{
-        top:        event._top,
-        height:     Math.max(event._height, 32),
-        borderLeft: `2px solid ${color}`,
-        paddingLeft: 12,
+        top:         event._top,
+        left:        leftExpr,
+        right:       rightExpr,
+        minHeight:   48,
+        height:      event._height,
+        borderLeft:  `2px solid ${color}`,
+        paddingLeft: 10,
         paddingTop:  4,
-        background: hovered ? '#1A1610' : 'transparent',
-        zIndex: 5,
+        background:  hovered ? '#1A1610' : 'transparent',
+        zIndex:      5 + col,
+        overflow:    'hidden',
       }}
     >
       <p className="font-cinzel" style={{ fontSize: '8px', color, letterSpacing: '0.1em' }}>
         {label}
       </p>
-      <p className="font-cormorant" style={{ fontSize: '17px', color: 'var(--text)', lineHeight: 1.2 }}>
+      <p className="font-cormorant" style={{ fontSize: '16px', color: 'var(--text)', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
         {event.title}
       </p>
-      <p className="font-mono" style={{ fontSize: '10px', color: 'var(--muted)' }}>
+      <p className="font-mono" style={{ fontSize: '9px', color: 'var(--muted)' }}>
         {format(new Date(event.startTime), 'h:mm a')} · {event.duration}m
       </p>
       {hovered && (
@@ -197,13 +235,8 @@ function DayTimeline({ day, events, onDelete, onAddClick }) {
   const dayEvts = events.filter((e) => isSameDay(new Date(e.startTime), day))
   const nowTop  = isToday(day) ? nowLineTop() : null
 
-  const decorated = dayEvts.map((ev) => {
-    const start  = new Date(ev.startTime)
-    const startH = start.getHours() + start.getMinutes() / 60
-    const top    = (startH - START_H) * HOUR_H
-    const height = (ev.duration / 60) * HOUR_H
-    return { ...ev, _top: top, _height: Math.max(height, 28) }
-  })
+  const decorated  = assignColumns(dayEvts)
+  const totalCols  = decorated.length > 0 ? Math.max(...decorated.map((e) => e._col)) + 1 : 1
 
   return (
     <div className="flex flex-col flex-1 min-w-0" style={{ borderRight: '1px solid var(--border)' }}>
@@ -269,7 +302,7 @@ function DayTimeline({ day, events, onDelete, onAddClick }) {
 
           {/* Events */}
           {decorated.map((ev) => (
-            <TimelineEvent key={ev.id} event={ev} onDelete={onDelete} />
+            <TimelineEvent key={ev.id} event={ev} totalCols={totalCols} onDelete={onDelete} />
           ))}
         </div>
 

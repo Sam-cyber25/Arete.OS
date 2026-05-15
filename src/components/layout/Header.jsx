@@ -7,6 +7,7 @@ import { useIsMobile }         from '../../hooks/useIsMobile'
 const PAGE_TITLES = {
   dashboard:   'Overview',
   goals:       'Goals & Tasks',
+  disciplines: 'Disciplines',
   memory:      'Memory',
   analytics:   'Analytics',
   schedule:    'Schedule',
@@ -18,9 +19,9 @@ const PAGE_TITLES = {
 }
 
 export default function Header() {
-  const { settings, currentPage } = useApp()
-  const [time, setTime]           = useState(new Date())
-  const isMobile                  = useIsMobile()
+  const { settings, currentPage, todayScore, setCurrentPage } = useApp()
+  const [time, setTime] = useState(new Date())
+  const isMobile        = useIsMobile()
 
   useEffect(() => {
     const interval = setInterval(() => setTime(new Date()), 1000)
@@ -37,17 +38,15 @@ export default function Header() {
 
     return (
       <header className="flex-shrink-0" style={{ zIndex: 10 }}>
-        <div
-          className="flex items-center justify-between px-4"
-          style={{ height: 48 }}
-        >
-          {/* Monogram */}
-          <span
+        <div className="flex items-center justify-between px-4" style={{ height: 48 }}>
+          {/* Monogram — taps to go home */}
+          <button
             className="font-cinzel tracking-widest"
             style={{ fontSize: '14px', color: 'var(--gold)', letterSpacing: '0.2em' }}
+            onClick={() => setCurrentPage('dashboard')}
           >
             AO
-          </span>
+          </button>
 
           {/* Section name */}
           <span
@@ -58,14 +57,28 @@ export default function Header() {
           </span>
 
           {/* Time only */}
-          <span
-            className="font-mono tabular-nums"
-            style={{ color: 'var(--bronze)', fontSize: '13px', letterSpacing: '0.06em' }}
-          >
+          <span className="font-mono tabular-nums" style={{ color: 'var(--bronze)', fontSize: '13px', letterSpacing: '0.06em' }}>
             {hh}:{mm}
           </span>
         </div>
-        <OrnamentalDivider opacity={0.15} />
+
+        {/* Discipline progress bar — always visible on mobile */}
+        <div style={{ height: 2, background: 'var(--divider)', position: 'relative' }}>
+          <div
+            style={{
+              position:   'absolute',
+              left:       0,
+              top:        0,
+              height:     '100%',
+              width:      `${todayScore ?? 0}%`,
+              background: 'var(--gold)',
+              opacity:    0.8,
+              transition: 'width 0.6s ease',
+            }}
+          />
+        </div>
+
+        <OrnamentalDivider opacity={0.12} />
       </header>
     )
   }
@@ -73,48 +86,28 @@ export default function Header() {
   /* ── Desktop Header ── */
   return (
     <header className="flex-shrink-0" style={{ zIndex: 10 }}>
-      <div
-        className="flex items-center justify-between px-8 py-0"
-        style={{ height: 56 }}
-      >
-        {/* Section title */}
+      <div className="flex items-center justify-between px-8 py-0" style={{ height: 56 }}>
         <div>
-          <p
-            className="font-cinzel uppercase tracking-widest"
-            style={{ color: 'var(--muted)', fontSize: '10px', letterSpacing: '0.22em' }}
-          >
+          <p className="font-cinzel uppercase tracking-widest" style={{ color: 'var(--muted)', fontSize: '10px', letterSpacing: '0.22em' }}>
             {title}
           </p>
         </div>
 
-        {/* Clock — center */}
         <div className="text-center absolute left-1/2 -translate-x-1/2">
-          <span
-            className="font-mono tabular-nums"
-            style={{ color: 'var(--bronze)', fontSize: '15px', letterSpacing: '0.08em' }}
-          >
+          <span className="font-mono tabular-nums" style={{ color: 'var(--bronze)', fontSize: '15px', letterSpacing: '0.08em' }}>
             {formatTime(time)}
           </span>
         </div>
 
-        {/* Name + date — right */}
         <div className="text-right">
-          <p
-            className="font-cormorant italic"
-            style={{ color: 'var(--text)', fontSize: '16px', lineHeight: 1.2 }}
-          >
+          <p className="font-cormorant italic" style={{ color: 'var(--text)', fontSize: '16px', lineHeight: 1.2 }}>
             {name}
           </p>
-          <p
-            className="font-garamond"
-            style={{ color: 'var(--muted)', fontSize: '12px' }}
-          >
+          <p className="font-garamond" style={{ color: 'var(--muted)', fontSize: '12px' }}>
             {formatDate(time)}
           </p>
         </div>
       </div>
-
-      {/* Ornamental divider */}
       <OrnamentalDivider opacity={0.18} />
     </header>
   )

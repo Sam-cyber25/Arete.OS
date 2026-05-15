@@ -32,7 +32,7 @@ export default function Layout({ children }) {
           className="flex-1 overflow-y-auto overflow-x-hidden"
           style={{
             /* Bottom padding on mobile prevents content from hiding behind bottom nav */
-            paddingBottom: isMobile ? 72 : 0,
+            paddingBottom: isMobile ? 80 : 0,
             /* Full-height pages handle their own layout; content pages get outer spacing */
             ...(isFullHeight ? {} : {
               paddingTop:   isMobile ? 8 : 0,

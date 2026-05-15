@@ -127,8 +127,8 @@ function buildDefaultEvents() {
 }
 
 export function useSchedule() {
-  /* Using 'schedule_v3' → stored as 'arete_schedule_v3' */
-  const [events, setEvents] = useLocalStorage('schedule_v3', buildDefaultEvents())
+  /* Using 'schedule_v4' → stored as 'arete_schedule_v4' */
+  const [events, setEvents] = useLocalStorage('schedule_v4', buildDefaultEvents())
 
   const addEvent    = (event)       => setEvents((prev) => [...prev, { ...event, id: `ev_${Date.now()}` }])
   const updateEvent = (id, updates) => setEvents((prev) => prev.map((e) => (e.id === id ? { ...e, ...updates } : e)))

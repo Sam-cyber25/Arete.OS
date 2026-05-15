@@ -4,6 +4,7 @@ import { useTasks }       from '../hooks/useTasks'
 import { useNotes }       from '../hooks/useNotes'
 import { useSchedule }    from '../hooks/useSchedule'
 import { useJournal }     from '../hooks/useJournal'
+import { useDisciplines } from '../hooks/useDisciplines'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 
 const AppContext = createContext(null)
@@ -19,11 +20,12 @@ export function AppProvider({ children }) {
   const [settings, setSettings]           = useLocalStorage('settings', DEFAULT_SETTINGS)
   const [streak, setStreak]               = useLocalStorage('streak',   { count: 1, lastDate: new Date().toISOString() })
 
-  const goalsApi    = useGoals()
-  const tasksApi    = useTasks()
-  const notesApi    = useNotes()
-  const scheduleApi = useSchedule()
-  const journalApi  = useJournal()
+  const goalsApi       = useGoals()
+  const tasksApi       = useTasks()
+  const notesApi       = useNotes()
+  const scheduleApi    = useSchedule()
+  const journalApi     = useJournal()
+  const disciplinesApi = useDisciplines()
 
   const showToast = useCallback((message, type = 'success') => {
     const id = Date.now()
@@ -84,6 +86,7 @@ export function AppProvider({ children }) {
         updateEvent: scheduleApi.updateEvent,
         deleteEvent: scheduleApi.deleteEvent,
         ...journalApi,
+        ...disciplinesApi,
       }}
     >
       {children}
