@@ -20,7 +20,7 @@ export default function JournalPage() {
   const [tab, setTab] = useState('today')
 
   return (
-    <motion.div {...PAGE} style={{ maxWidth: 760, margin: '0 auto' }}>
+    <motion.div {...PAGE} className="page-container" style={{ maxWidth: 760, margin: '0 auto' }}>
       {/* Header */}
       <div className="mb-8">
         <p

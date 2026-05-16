@@ -26,7 +26,7 @@ export default function GoalsPage() {
   const activeGoals = goals.filter((g) => g.status === 'Active').length
 
   return (
-    <motion.div {...PAGE} style={{ maxWidth: 820, margin: '0 auto' }}>
+    <motion.div {...PAGE} className="page-container" style={{ maxWidth: 820, margin: '0 auto' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>

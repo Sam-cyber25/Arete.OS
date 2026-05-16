@@ -44,18 +44,25 @@ export default function Sidebar() {
       style={{ background: 'var(--bg)', borderRight: '1px solid var(--border)', zIndex: 20 }}
     >
       {/* Monogram */}
-      <div className="flex items-center gap-3 px-4 mb-10 overflow-hidden" style={{ minHeight: 32 }}>
-        <span className="flex-shrink-0 font-cinzel tracking-widest" style={{ fontSize: '13px', color: 'var(--gold)', letterSpacing: '0.2em' }}>
-          AO
+      <div className="flex items-center gap-3 px-4 mb-10 overflow-hidden" style={{ minHeight: 40 }}>
+        <span className="flex-shrink-0 font-cinzel" style={{ fontSize: '13px', color: 'var(--gold)', letterSpacing: '0.2em' }}>
+          AÈ
         </span>
-        <motion.span
+        <motion.div
           animate={{ opacity: expanded ? 1 : 0, width: expanded ? 'auto' : 0 }}
           transition={{ duration: 0.15 }}
-          className="whitespace-nowrap overflow-hidden font-cinzel tracking-widest"
-          style={{ fontSize: '10px', color: 'var(--gold)', letterSpacing: '0.28em' }}
+          className="overflow-hidden flex-shrink-0"
         >
-          ARÊTE OS
-        </motion.span>
+          <p className="font-cinzel whitespace-nowrap" style={{ fontSize: '11px', color: 'var(--gold)', letterSpacing: '0.22em', lineHeight: 1.2 }}>
+            AÈRETE
+          </p>
+          <p className="font-cinzel whitespace-nowrap" style={{ fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.14em', marginTop: 2 }}>
+            MOVE WITH CONSISTENCY
+          </p>
+          <p className="font-cinzel whitespace-nowrap" style={{ fontSize: '7px', color: 'var(--faint)', letterSpacing: '0.12em', marginTop: 1 }}>
+            SINCE 2026
+          </p>
+        </motion.div>
       </div>
 
       {/* Main nav */}

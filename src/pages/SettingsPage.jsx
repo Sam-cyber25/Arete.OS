@@ -11,7 +11,7 @@ const PAGE = {
 
 export default function SettingsPage() {
   return (
-    <motion.div {...PAGE} style={{ maxWidth: 740, margin: '0 auto' }}>
+    <motion.div {...PAGE} className="page-container" style={{ maxWidth: 740, margin: '0 auto' }}>
       <div className="mb-8">
         <p
           className="font-cinzel uppercase tracking-widest"

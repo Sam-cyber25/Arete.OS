@@ -138,7 +138,7 @@ export default function AnalyticsPage() {
   ]
 
   return (
-    <motion.div {...PAGE} style={{ maxWidth: 1000, margin: '0 auto' }}>
+    <motion.div {...PAGE} className="page-container" style={{ maxWidth: 1000, margin: '0 auto' }}>
       {/* Header */}
       <div className="mb-8">
         <p className="font-cinzel uppercase tracking-widest" style={{ fontSize: '11px', color: 'var(--bronze)', letterSpacing: '0.25em', marginBottom: 4 }}>

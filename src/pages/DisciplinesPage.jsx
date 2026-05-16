@@ -111,8 +111,10 @@ function HabitCard({ habit, completed, streak, onToggle, onDelete, onEditName })
         onClick={onToggle}
         whileTap={{ scale: 0.85 }}
         style={{
-          width:        22,
-          height:       22,
+          width:        24,
+          height:       24,
+          minWidth:     24,
+          minHeight:    24,
           borderRadius: '50%',
           border:       `1px solid ${completed ? 'var(--gold)' : '#8A7A65'}`,
           background:   completed ? 'rgba(201,168,76,0.15)' : 'transparent',
@@ -122,6 +124,7 @@ function HabitCard({ habit, completed, streak, onToggle, onDelete, onEditName })
           flexShrink:   0,
           cursor:       'pointer',
           transition:   'all 0.22s ease',
+          padding:      0,
         }}
       >
         <AnimatePresence>
@@ -353,7 +356,8 @@ export default function DisciplinesPage() {
   return (
     <motion.div
       {...PAGE}
-      style={{ maxWidth: 900, margin: '0 auto', padding: isMobile ? '0 16px' : '0' }}
+      className="page-container"
+      style={{ maxWidth: 900, margin: '0 auto', padding: isMobile ? undefined : '0' }}
     >
       {/* ── Page header ── */}
       <div className="flex items-start justify-between mb-6">
@@ -373,7 +377,9 @@ export default function DisciplinesPage() {
         </div>
 
         {/* Circular progress */}
-        <ProgressRing completed={completedTodayCount} total={applicableToday.length} />
+        <div style={{ marginTop: isMobile ? 8 : 0, flexShrink: 0 }}>
+          <ProgressRing completed={completedTodayCount} total={applicableToday.length} />
+        </div>
       </div>
 
       <OrnamentalDivider opacity={0.15} />

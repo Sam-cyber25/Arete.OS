@@ -45,7 +45,7 @@ export default function Header() {
             style={{ fontSize: '14px', color: 'var(--gold)', letterSpacing: '0.2em' }}
             onClick={() => setCurrentPage('dashboard')}
           >
-            AO
+            AÈ
           </button>
 
           {/* Section name */}

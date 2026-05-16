@@ -1,16 +1,19 @@
 import { memo, useState }           from 'react'
 import { motion, AnimatePresence }  from 'framer-motion'
 import { useApp }                   from '../../context/AppContext'
+import { useIsMobile }              from '../../hooks/useIsMobile'
 
 const STATUS_OPTIONS = ['Active', 'Paused', 'Completed']
 
 const GoalCard = memo(function GoalCard({ goal }) {
   const { updateGoal, deleteGoal, addSubtask, toggleSubtask, deleteSubtask, showToast } = useApp()
+  const isMobile                    = useIsMobile()
   const [expanded,   setExpanded]   = useState(false)
   const [editing,    setEditing]    = useState(false)
   const [editData,   setEditData]   = useState({ title: goal.title, notes: goal.notes || '' })
   const [newSubtask, setNewSubtask] = useState('')
   const [confirmDel, setConfirmDel] = useState(false)
+  const [menuOpen,   setMenuOpen]   = useState(false)
 
   const subtasks = goal.subtasks || []
   const doneCount = subtasks.filter((s) => s.completed).length
@@ -114,10 +117,63 @@ const GoalCard = memo(function GoalCard({ goal }) {
         <div className="flex items-center gap-3 flex-shrink-0">
           {editing ? (
             <>
-              <button className="btn-ghost" style={{ fontSize: '9px' }} onClick={handleSave}>Save</button>
-              <button className="btn-ghost" style={{ fontSize: '9px' }} onClick={() => setEditing(false)}>Cancel</button>
+              <button className="btn-ghost icon-btn" style={{ fontSize: '9px', minHeight: 'unset' }} onClick={handleSave}>Save</button>
+              <button className="btn-ghost icon-btn" style={{ fontSize: '9px', minHeight: 'unset' }} onClick={() => setEditing(false)}>Cancel</button>
             </>
+          ) : isMobile ? (
+            /* ── Mobile: ⋯ dropdown menu ── */
+            <div style={{ position: 'relative' }}>
+              <button
+                className="icon-btn"
+                style={{
+                  fontSize: '20px', color: 'var(--muted)', padding: '2px 6px',
+                  background: 'transparent', border: 'none', cursor: 'pointer',
+                  lineHeight: 1, minHeight: 'unset',
+                }}
+                onClick={(e) => { e.stopPropagation(); setMenuOpen((p) => !p) }}
+              >
+                ⋯
+              </button>
+              <AnimatePresence>
+                {menuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.12 }}
+                    style={{
+                      position: 'absolute', right: 0, top: '100%', zIndex: 30,
+                      background: 'var(--surface)', border: '1px solid var(--border)',
+                      minWidth: 110,
+                    }}
+                  >
+                    <button
+                      className="btn-ghost icon-btn"
+                      style={{
+                        display: 'block', width: '100%', textAlign: 'left',
+                        padding: '10px 16px', fontSize: '9px', minHeight: 'unset',
+                      }}
+                      onClick={() => { setEditing(true); setMenuOpen(false) }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="btn-ghost icon-btn"
+                      style={{
+                        display: 'block', width: '100%', textAlign: 'left',
+                        padding: '10px 16px', fontSize: '9px', minHeight: 'unset',
+                        color: confirmDel ? 'var(--danger)' : undefined,
+                      }}
+                      onClick={() => { handleDelete(); setMenuOpen(false) }}
+                    >
+                      {confirmDel ? 'Confirm?' : 'Delete'}
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           ) : (
+            /* ── Desktop: inline buttons ── */
             <>
               <button className="btn-ghost" style={{ fontSize: '9px' }} onClick={() => setEditing(true)}>Edit</button>
               <button

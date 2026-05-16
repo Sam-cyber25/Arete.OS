@@ -1,5 +1,12 @@
 import { useLocalStorage } from './useLocalStorage'
 
+// ── Version-keyed seed: forces re-seed of default goals on version bump ──
+const GOALS_SEED_KEY = 'arete_goals_seeded_v3'
+if (!localStorage.getItem(GOALS_SEED_KEY)) {
+  localStorage.removeItem('arete_goals')
+  localStorage.setItem(GOALS_SEED_KEY, '1')
+}
+
 // Progress is always derived from subtasks — never set manually
 function calcProgress(subtasks = []) {
   if (!subtasks.length) return 0

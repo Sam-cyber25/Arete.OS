@@ -5,6 +5,7 @@ import NoteCard                     from '../components/memory/NoteCard'
 import AddNotePanel                 from '../components/memory/AddNotePanel'
 import MemorySearch                 from '../components/memory/MemorySearch'
 import OrnamentalDivider            from '../components/layout/OrnamentalDivider'
+import { useIsMobile }              from '../hooks/useIsMobile'
 const PAGE = {
   initial:    { opacity: 0, y: 8 },
   animate:    { opacity: 1, y: 0 },
@@ -14,6 +15,7 @@ const PAGE = {
 
 export default function MemoryPage() {
   const { notes, notesThisWeek, mostUsedTag } = useApp()
+  const isMobile                               = useIsMobile()
   const [panelOpen, setPanelOpen] = useState(false)
   const [search,    setSearch]    = useState('')
   const [activeTag, setActiveTag] = useState(null)
@@ -33,7 +35,7 @@ export default function MemoryPage() {
   const allTags = [...new Set(notes.flatMap((n) => n.tags))].slice(0, 20)
 
   return (
-    <motion.div {...PAGE} style={{ maxWidth: 740, margin: '0 auto' }}>
+    <motion.div {...PAGE} className="page-container" style={{ maxWidth: 740, margin: '0 auto' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -47,7 +49,11 @@ export default function MemoryPage() {
             Memory
           </p>
         </div>
-        <button className="btn-primary" onClick={() => setPanelOpen(true)}>
+        <button
+          className="btn-primary"
+          style={isMobile ? { marginRight: 0, flexShrink: 0 } : undefined}
+          onClick={() => setPanelOpen(true)}
+        >
           New Memory
         </button>
       </div>

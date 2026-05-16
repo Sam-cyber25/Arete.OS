@@ -26,7 +26,7 @@ export default function Dashboard() {
     <motion.div
       {...PAGE}
       className="flex flex-col gap-4"
-      style={{ maxWidth: 1100, margin: '0 auto', padding: isMobile ? '16px 16px 0' : '0' }}
+      style={{ maxWidth: 1100, margin: '0 auto', padding: isMobile ? '16px 16px 88px' : '0' }}
     >
       {/* ── Quote + streak row ── */}
       {isMobile ? (
