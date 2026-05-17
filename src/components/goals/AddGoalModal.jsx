@@ -22,19 +22,23 @@ export default function AddGoalModal({ open, onClose }) {
       {open && (
         <motion.div
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-6"
-          style={{ background: 'rgba(12,10,8,0.85)' }}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 1000,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+            background: 'rgba(12,10,8,0.85)',
+          }}
           onClick={onClose}
         >
           <motion.div
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="w-full max-w-lg"
             style={{
+              width: '100%', maxWidth: 520,
               background: 'var(--surface)',
               border:     '1px solid var(--border)',
               borderTop:  '1px solid rgba(201,168,76,0.4)',
               padding:    36,
+              zIndex:     1001,
             }}
             onClick={(e) => e.stopPropagation()}
           >

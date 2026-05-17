@@ -51,7 +51,7 @@ function BookForm({ initial, onSave, onCancel, isMobile }) {
       style={{
         position:   'fixed',
         inset:      0,
-        zIndex:     50,
+        zIndex:     1000,
         display:    'flex',
         alignItems: isMobile ? 'flex-end' : 'center',
         justifyContent: 'center',
@@ -72,6 +72,7 @@ function BookForm({ initial, onSave, onCancel, isMobile }) {
           maxWidth:   isMobile ? undefined : 560,
           maxHeight:  '88vh',
           overflowY:  'auto',
+          zIndex:     1001,
         }}
         onClick={(e) => e.stopPropagation()}
       >

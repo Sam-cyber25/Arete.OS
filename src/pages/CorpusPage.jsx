@@ -190,8 +190,7 @@ function LogSheet({ open, onClose, entry, onSave }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
-            className="fixed inset-0 z-40"
-            style={{ background: 'rgba(12,10,8,0.82)' }}
+            style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(12,10,8,0.82)' }}
             onClick={onClose}
           />
           <motion.div
@@ -200,8 +199,7 @@ function LogSheet({ open, onClose, entry, onSave }) {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed left-0 right-0 bottom-0 z-50"
-            style={{
+            style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1001,
               background:  '#0F0D0A',
               borderTop:   '1px solid rgba(201,168,76,0.4)',
               maxHeight:   '88vh',

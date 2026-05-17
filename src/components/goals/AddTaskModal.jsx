@@ -23,8 +23,11 @@ export default function AddTaskModal({ open, onClose }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(3,7,18,0.8)', backdropFilter: 'blur(8px)' }}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 1000,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+            background: 'rgba(3,7,18,0.8)', backdropFilter: 'blur(8px)',
+          }}
           onClick={onClose}
         >
           <motion.div
@@ -32,10 +35,11 @@ export default function AddTaskModal({ open, onClose }) {
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="w-full max-w-md rounded-2xl p-6"
             style={{
+              width: '100%', maxWidth: 440, zIndex: 1001,
               background: 'rgba(15,23,42,0.98)',
               border: '1px solid rgba(59,130,246,0.3)',
+              borderRadius: 16, padding: 24,
               backdropFilter: 'blur(20px)',
             }}
             onClick={(e) => e.stopPropagation()}

@@ -36,7 +36,7 @@ export default function Layout({ children }) {
       {/* Desktop sidebar — hidden on mobile */}
       {!isMobile && <Sidebar />}
 
-      <div className="flex flex-col flex-1 min-w-0" style={{ position: 'relative', zIndex: 1 }}>
+      <div className="flex flex-col flex-1 min-w-0" style={{ position: 'relative' }}>
         <Header />
 
         <main

@@ -29,8 +29,11 @@ export default function EntryModal({ entry, onClose }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-6"
-        style={{ background: 'rgba(12,10,8,0.88)' }}
+        style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+          background: 'rgba(12,10,8,0.88)',
+        }}
         onClick={onClose}
       >
         <motion.div
@@ -39,8 +42,8 @@ export default function EntryModal({ entry, onClose }) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="w-full max-w-2xl"
           style={{
+            width: '100%', maxWidth: 640, zIndex: 1001,
             background:  'var(--surface)',
             border:      '1px solid var(--border)',
             borderTop:   '1px solid rgba(201,168,76,0.4)',

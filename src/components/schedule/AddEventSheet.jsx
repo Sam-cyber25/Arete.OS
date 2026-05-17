@@ -421,7 +421,7 @@ export default function AddEventSheet({ open, onClose, editingEvent, defaultTime
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
-            style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(12,10,8,0.8)' }}
+            style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(12,10,8,0.8)' }}
             onClick={onClose}
           />
 
@@ -436,16 +436,17 @@ export default function AddEventSheet({ open, onClose, editingEvent, defaultTime
               style={{
                 position:   'fixed',
                 left:       0,
-                right:      0,
                 bottom:     0,
-                zIndex:     55,
-                background: '#0F0D0A',
+                width:      '100vw',
+                zIndex:     1001,
+                background: '#13110E',
                 borderTop:  '1px solid rgba(201,168,76,0.4)',
-                maxHeight:  '92vh',
+                maxHeight:  '85vh',
                 overflowY:  'auto',
                 display:    'flex',
                 flexDirection: 'column',
               }}
+              onClick={(e) => e.stopPropagation()}
             >
               <FormContent
                 editingEvent={editingEvent}
@@ -468,17 +469,18 @@ export default function AddEventSheet({ open, onClose, editingEvent, defaultTime
                 top:        '50%',
                 left:       '50%',
                 transform:  'translate(-50%, -50%)',
-                zIndex:     55,
-                background: '#0F0D0A',
+                zIndex:     1001,
+                background: '#13110E',
                 border:     '1px solid rgba(201,168,76,0.25)',
-                width:      480,
-                maxWidth:   'calc(100vw - 48px)',
-                maxHeight:  '88vh',
+                width:      520,
+                maxWidth:   'calc(100vw - 40px)',
+                maxHeight:  '85vh',
                 overflowY:  'auto',
                 padding:    '28px 32px 36px',
                 display:    'flex',
                 flexDirection: 'column',
               }}
+              onClick={(e) => e.stopPropagation()}
             >
               <FormContent
                 editingEvent={editingEvent}
