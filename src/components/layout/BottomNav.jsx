@@ -17,9 +17,11 @@ const MORE_ITEMS = [
   { id: 'analytics',   numeral: 'VI',   label: 'Analytics'   },
   { id: 'schedule',    numeral: 'VII',  label: 'Schedule'    },
   { id: 'journal',     numeral: 'VIII', label: 'Journal'     },
-  { id: 'whiteboard',  numeral: 'IX',   label: 'Whiteboard'  },
-  { id: 'stickynotes', numeral: 'X',    label: 'Sticky Notes'},
-  { id: 'settings',    numeral: 'XI',   label: 'Settings'    },
+  { id: 'codex',       numeral: 'IX',   label: 'Codex'       },
+  { id: 'corpus',      numeral: 'X',    label: 'Corpus'      },
+  { id: 'whiteboard',  numeral: 'XI',   label: 'Whiteboard'  },
+  { id: 'stickynotes', numeral: 'XII',  label: 'Sticky Notes'},
+  { id: 'settings',    numeral: 'XIII', label: 'Settings'    },
 ]
 
 const MORE_IDS  = new Set(MORE_ITEMS.map((i) => i.id))

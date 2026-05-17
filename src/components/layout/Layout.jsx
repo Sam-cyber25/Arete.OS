@@ -5,6 +5,7 @@ import OrnamentalBackground from './OrnamentalBackground'
 import IdolBackground       from './IdolBackground'
 import { useIsMobile }      from '../../hooks/useIsMobile'
 import { useApp }           from '../../context/AppContext'
+import { useTimeTheme }     from '../../hooks/useTimeTheme'
 
 /* Full-height flex pages that manage their own internal layout */
 const FULL_HEIGHT_PAGES = new Set(['schedule', 'whiteboard', 'stickynotes', 'planner'])
@@ -13,6 +14,7 @@ export default function Layout({ children }) {
   const isMobile      = useIsMobile()
   const { currentPage } = useApp()
   const isFullHeight  = FULL_HEIGHT_PAGES.has(currentPage)
+  const timeTheme     = useTimeTheme()
 
   return (
     <div
@@ -21,6 +23,15 @@ export default function Layout({ children }) {
     >
       <OrnamentalBackground />
       <IdolBackground />
+
+      {/* Time-of-day atmosphere tint — very subtle, pointer-events: none */}
+      <div style={{
+        position:      'fixed',
+        inset:         0,
+        zIndex:        0,
+        pointerEvents: 'none',
+        background:    timeTheme.atmosphere,
+      }} />
 
       {/* Desktop sidebar — hidden on mobile */}
       {!isMobile && <Sidebar />}

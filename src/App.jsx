@@ -4,6 +4,7 @@ import { AppProvider, useApp }                               from './context/App
 import Layout                                                from './components/layout/Layout'
 import CommandPalette                                        from './components/CommandPalette'
 import Toast                                                 from './components/layout/Toast'
+import SplashScreen                                          from './components/SplashScreen'
 
 // Lazy-loaded pages
 const Dashboard      = lazy(() => import('./pages/Dashboard'))
@@ -17,6 +18,8 @@ const PlannerPage    = lazy(() => import('./pages/PlannerPage'))
 const WhiteboardPage = lazy(() => import('./pages/WhiteboardPage'))
 const StickyNotesPage= lazy(() => import('./pages/StickyNotesPage'))
 const SettingsPage   = lazy(() => import('./pages/SettingsPage'))
+const CodexPage      = lazy(() => import('./pages/CodexPage'))
+const CorpusPage     = lazy(() => import('./pages/CorpusPage'))
 
 function PageLoader() {
   return (
@@ -38,6 +41,8 @@ const PAGES = {
   whiteboard:  WhiteboardPage,
   stickynotes: StickyNotesPage,
   settings:    SettingsPage,
+  codex:       CodexPage,
+  corpus:      CorpusPage,
 }
 
 function AppInner() {
@@ -96,9 +101,20 @@ function AppInner() {
 }
 
 export default function App() {
+  /* One-per-session splash: if sessionStorage flag already set, skip splash */
+  const [splashDone, setSplashDone] = useState(
+    () => !!sessionStorage.getItem('arete_splash_shown')
+  )
+
   return (
     <AppProvider>
-      <AppInner />
+      <AnimatePresence mode="wait">
+        {!splashDone ? (
+          <SplashScreen key="splash" onComplete={() => setSplashDone(true)} />
+        ) : (
+          <AppInner key="app" />
+        )}
+      </AnimatePresence>
     </AppProvider>
   )
 }

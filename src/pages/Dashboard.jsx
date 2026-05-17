@@ -1,5 +1,5 @@
 import { motion }          from 'framer-motion'
-import QuoteHero           from '../components/dashboard/QuoteHero'
+import GreetingHero        from '../components/dashboard/GreetingHero'
 import VoiceOfAncients     from '../components/dashboard/VoiceOfAncients'
 import TodaysPriority      from '../components/dashboard/TodaysPriority'
 import StatsRow            from '../components/dashboard/StatsRow'
@@ -31,12 +31,12 @@ export default function Dashboard() {
       {/* ── Quote + streak row ── */}
       {isMobile ? (
         <>
-          <QuoteHero />
+          <GreetingHero />
           <JournalStreak />
         </>
       ) : (
         <div className="grid grid-cols-3 gap-6">
-          <div className="col-span-2"><QuoteHero /></div>
+          <div className="col-span-2"><GreetingHero /></div>
           <JournalStreak />
         </div>
       )}
