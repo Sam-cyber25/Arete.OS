@@ -63,7 +63,7 @@ export default function SplashScreen({ onComplete }) {
           fontFamily:    'Cinzel, serif',
           fontWeight:    400,
           fontSize:      9,
-          color:         '#8A7A65',
+          color:         '#A89880',
           letterSpacing: '0.3em',
           textTransform: 'uppercase',
           margin:        0,

@@ -41,7 +41,7 @@ export default function TimeRuler({ isToday, currentX }) {
               top:        8,
               fontFamily: 'JetBrains Mono, monospace',
               fontSize:   '10px',
-              color:      '#4A3F32',
+              color:      '#7A6A58',
               letterSpacing: '0.04em',
               whiteSpace: 'nowrap',
               userSelect: 'none',

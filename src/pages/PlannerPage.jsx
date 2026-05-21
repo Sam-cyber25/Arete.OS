@@ -62,7 +62,7 @@ function RoutineBlock({ event }) {
   return (
     <div
       className="flex items-start gap-3 py-2"
-      style={{ borderBottom: '1px solid var(--divider)', opacity: 0.65 }}
+      style={{ borderBottom: '1px solid var(--divider)' }}
     >
       <div style={{ width: 2, height: '100%', minHeight: 36, background: color, flexShrink: 0, borderRadius: 1 }} />
       <div className="flex-1 min-w-0">
@@ -288,16 +288,13 @@ function FullPicture({ fixedBlocks, intentions }) {
           <div
             key={idx}
             className="flex items-start gap-3 py-2"
-            style={{
-              borderBottom: '1px solid var(--divider)',
-              opacity: item.type === 'fixed' ? 0.55 : 1,
-            }}
+            style={{ borderBottom: '1px solid var(--divider)' }}
           >
             <span className="font-mono flex-shrink-0" style={{ fontSize: '10px', color: 'var(--faint)', width: 46 }}>
               {item.time}
             </span>
-            <div style={{ width: 2, minHeight: 20, background: color, flexShrink: 0, borderRadius: 1 }} />
-            <span className="font-garamond" style={{ fontSize: '14px', color: 'var(--text)' }}>
+            <div style={{ width: 2, minHeight: 20, background: color, flexShrink: 0, borderRadius: 1, opacity: item.type === 'fixed' ? 0.6 : 1 }} />
+            <span className="font-garamond" style={{ fontSize: '14px', color: item.type === 'fixed' ? 'var(--muted)' : 'var(--text)' }}>
               {item.label}
             </span>
             {item.type === 'intention' && item.priority === 'high' && (
@@ -517,7 +514,7 @@ export default function PlannerPage() {
             <div style={{ padding: '20px 24px' }}>
               <div className="flex items-center justify-between mb-4">
                 <p className="section-label">Tomorrow's Intentions</p>
-                <span className="font-mono" style={{ fontSize: '10px', color: 'var(--faint)' }}>
+                <span className="font-mono" style={{ fontSize: '10px', color: 'var(--muted)' }}>
                   {(plan.intentions || []).length} added
                 </span>
               </div>
@@ -547,7 +544,7 @@ export default function PlannerPage() {
               {!showAddForm && (
                 <button
                   className="font-cinzel uppercase"
-                  style={{ fontSize: '9px', color: 'var(--muted)', letterSpacing: '0.2em', marginTop: 16, display: 'block', minHeight: 44 }}
+                  style={{ fontSize: '9px', color: 'var(--gold)', letterSpacing: '0.2em', marginTop: 16, display: 'block', minHeight: 44 }}
                   onClick={() => setShowAddForm(true)}
                 >
                   + Add Intention
@@ -558,7 +555,7 @@ export default function PlannerPage() {
               <div style={{ marginTop: 24, borderTop: '1px solid var(--divider)', paddingTop: 16 }}>
                 <button
                   className="font-cinzel uppercase"
-                  style={{ fontSize: '8px', color: 'var(--faint)', letterSpacing: '0.18em', minHeight: 44 }}
+                  style={{ fontSize: '8px', color: 'var(--gold)', letterSpacing: '0.18em', minHeight: 44 }}
                   onClick={() => setShowCarry((p) => !p)}
                 >
                   {showCarry ? '↑ Hide' : '↓ Carry from today?'}

@@ -263,8 +263,7 @@ const GoalCard = memo(function GoalCard({ goal }) {
                     className="font-garamond flex-1"
                     style={{
                       fontSize: '15px',
-                      color:    st.completed ? 'var(--muted)' : 'var(--text)',
-                      opacity:  st.completed ? 0.55 : 1,
+                      color:    st.completed ? '#8A7D6E' : 'var(--text)',
                     }}
                   >
                     {st.title}

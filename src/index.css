@@ -12,11 +12,18 @@
   --gold:     #C9A84C;
   --bronze:   #8B7355;
   --text:     #F0EAD6;   /* warm linen white */
-  --muted:    #8A7A65;   /* readable warm brown */
-  --faint:    #4A3F32;   /* barely there, ornamental only */
+  --muted:    #A89880;   /* readable warm brown — brightened for legibility */
+  --faint:    #7A6A58;   /* timestamps, smallest labels */
   --danger:   #8B3A3A;
   --success:  #4A6741;
   --divider:  #1E1A15;
+
+  /* ── Extended text hierarchy ─────────────────────────────── */
+  --text-primary:    #F0EAD6;   /* main headings */
+  --text-secondary:  #D4C5A9;   /* body text */
+  --text-muted:      #A89880;   /* labels, secondary info */
+  --text-faint:      #7A6A58;   /* timestamps, smallest labels */
+  --text-decorative: #4A3F32;   /* ornamental only — not for reading */
 }
 
 /* ─── Reset ─────────────────────────────────────────────────── */
@@ -190,7 +197,7 @@ input:focus, textarea:focus, select:focus { outline: none; }
   outline: none;
   transition: border-color 180ms ease;
 }
-.input-underline::placeholder { color: #5A4E40; }
+.input-underline::placeholder { color: #6B5F4E; }
 .input-underline:focus { border-bottom-color: var(--gold); }
 
 .input-box {
@@ -205,7 +212,7 @@ input:focus, textarea:focus, select:focus { outline: none; }
   outline: none;
   transition: border-color 180ms ease;
 }
-.input-box::placeholder { color: #5A4E40; }
+.input-box::placeholder { color: #6B5F4E; }
 .input-box:focus { border-color: rgba(201,168,76,0.4); }
 
 .textarea-journal {
@@ -222,7 +229,7 @@ input:focus, textarea:focus, select:focus { outline: none; }
   resize: none;
   transition: border-color 180ms ease;
 }
-.textarea-journal::placeholder { color: #5A4E40; font-style: italic; }
+.textarea-journal::placeholder { color: #6B5F4E; font-style: italic; }
 .textarea-journal:focus { border-bottom-color: rgba(201,168,76,0.3); }
 
 /* ─── Typography helpers ────────────────────────────────────── */
@@ -237,6 +244,12 @@ input:focus, textarea:focus, select:focus { outline: none; }
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--muted);
+}
+
+/* ── Readable text helpers — enforce opacity:1 so dimming can't hide labels ── */
+.cinzel-label, .section-tag, .meta-text, .chart-label {
+  color: var(--text-muted);
+  opacity: 1 !important;
 }
 
 /* ─── Progress bars ─────────────────────────────────────────── */

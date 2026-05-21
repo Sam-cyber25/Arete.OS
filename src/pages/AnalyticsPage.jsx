@@ -22,7 +22,7 @@ function ChartCard({ title, subtitle, children }) {
     <div style={{ border: '1px solid var(--border)', background: 'var(--surface)', padding: 24 }}>
       <p className="section-label" style={{ marginBottom: subtitle ? 2 : 16 }}>{title}</p>
       {subtitle && (
-        <p className="font-garamond" style={{ fontSize: '13px', color: 'var(--faint)', marginBottom: 16 }}>
+        <p className="font-garamond" style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: 16 }}>
           {subtitle}
         </p>
       )}
@@ -38,13 +38,13 @@ function DisciplineWeekBar({ data }) {
       <BarChart data={data} margin={{ top: 4, right: 0, bottom: 0, left: -20 }}>
         <XAxis
           dataKey="day"
-          tick={{ fontFamily: 'Cinzel, serif', fontSize: 9, fill: '#8A7A65', letterSpacing: 2 }}
+          tick={{ fontFamily: 'Cinzel, serif', fontSize: 9, fill: '#A89880', letterSpacing: 2 }}
           axisLine={false}
           tickLine={false}
         />
         <YAxis
           domain={[0, 100]}
-          tick={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, fill: '#4A3F32' }}
+          tick={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, fill: '#8A7D6E' }}
           axisLine={false}
           tickLine={false}
         />
@@ -84,7 +84,7 @@ function StreakLeaderboard({ habits, getHabitStreak }) {
     <div className="flex flex-col gap-3">
       {ranked.map((h, i) => (
         <div key={h.id} className="flex items-center gap-3">
-          <span className="font-mono flex-shrink-0" style={{ fontSize: '10px', color: 'var(--faint)', width: 16 }}>
+          <span className="font-mono flex-shrink-0" style={{ fontSize: '10px', color: 'var(--muted)', width: 16 }}>
             {i + 1}
           </span>
           <div
@@ -160,7 +160,7 @@ export default function AnalyticsPage() {
             style={{ borderRight: i < summaryStats.length - 1 ? '1px solid var(--divider)' : 'none' }}
           >
             <p className="font-mono" style={{ fontSize: '32px', color: 'var(--gold)', lineHeight: 1 }}>{stat.value}</p>
-            <p className="font-cinzel uppercase" style={{ fontSize: '8px', color: 'var(--faint)', letterSpacing: '0.2em', marginTop: 6 }}>
+            <p className="font-cinzel uppercase" style={{ fontSize: '8px', color: 'var(--muted)', letterSpacing: '0.2em', marginTop: 6 }}>
               {stat.label}
             </p>
           </div>

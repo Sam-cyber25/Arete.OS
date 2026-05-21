@@ -167,12 +167,11 @@ function HabitCard({ habit, completed, streak, onToggle, onDelete, onEditName })
             onClick={() => setEditing(true)}
             style={{
               fontSize:  '16px',
-              color:     'var(--text)',
-              opacity:   completed ? 0.5 : 1,
+              color:     completed ? '#8A7D6E' : 'var(--text)',
               lineHeight: 1.3,
               cursor:    'text',
               display:   'block',
-              transition: 'opacity 0.2s',
+              transition: 'color 0.2s',
             }}
           >
             {habit.name}
@@ -371,7 +370,7 @@ export default function DisciplinesPage() {
           <p className="font-cormorant" style={{ fontSize: '28px', color: 'var(--text)', fontWeight: 600, lineHeight: 1.2 }}>
             The Disciplines
           </p>
-          <p className="font-cinzel" style={{ fontSize: '9px', color: 'var(--faint)', letterSpacing: '0.2em', marginTop: 4 }}>
+          <p className="font-cinzel" style={{ fontSize: '9px', color: '#8A7D6E', letterSpacing: '0.2em', marginTop: 4 }}>
             {dateRoman(today)}
           </p>
         </div>
@@ -437,7 +436,7 @@ export default function DisciplinesPage() {
               <div key={h.id} className="flex items-center gap-4">
                 <span
                   className="font-mono flex-shrink-0"
-                  style={{ fontSize: '9px', color: 'var(--faint)', width: 18 }}
+                  style={{ fontSize: '9px', color: 'var(--muted)', width: 18 }}
                 >
                   {i + 1}.
                 </span>

@@ -470,14 +470,14 @@ export default function CorpusPage() {
               <LineChart data={weightData} margin={{ top: 4, right: 8, bottom: 0, left: -24 }}>
                 <XAxis
                   dataKey="label"
-                  tick={{ fontFamily: 'Cinzel, serif', fontSize: 8, fill: '#4A3F32', letterSpacing: 1 }}
+                  tick={{ fontFamily: 'Cinzel, serif', fontSize: 8, fill: '#7A6A58', letterSpacing: 1 }}
                   axisLine={false}
                   tickLine={false}
                   interval="preserveStartEnd"
                 />
                 <YAxis
                   domain={['auto', 'auto']}
-                  tick={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, fill: '#4A3F32' }}
+                  tick={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, fill: '#7A6A58' }}
                   axisLine={false}
                   tickLine={false}
                 />
@@ -498,20 +498,20 @@ export default function CorpusPage() {
         {/* Protein bar chart */}
         <div style={{ border: '1px solid var(--border)', background: 'var(--surface)', padding: 24 }}>
           <p className="section-label" style={{ marginBottom: 4 }}>Protein Log</p>
-          <p className="font-garamond" style={{ fontSize: '13px', color: 'var(--faint)', marginBottom: 16 }}>
+          <p className="font-garamond" style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: 16 }}>
             Last 14 days — goal {PROTEIN_GOAL}g
           </p>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={last14} margin={{ top: 4, right: 8, bottom: 0, left: -24 }}>
               <XAxis
                 dataKey="label"
-                tick={{ fontFamily: 'Cinzel, serif', fontSize: 8, fill: '#4A3F32', letterSpacing: 1 }}
+                tick={{ fontFamily: 'Cinzel, serif', fontSize: 8, fill: '#7A6A58', letterSpacing: 1 }}
                 axisLine={false}
                 tickLine={false}
                 interval="preserveStartEnd"
               />
               <YAxis
-                tick={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, fill: '#4A3F32' }}
+                tick={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, fill: '#7A6A58' }}
                 axisLine={false}
                 tickLine={false}
               />

@@ -149,7 +149,7 @@ export default function EventBlock({ event, activeFilter, onEdit }) {
               {event.title}
             </div>
             {width >= 130 && (
-              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', color: '#4A3F32', marginTop: 3, lineHeight: 1 }}>
+              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', color: '#7A6A58', marginTop: 3, lineHeight: 1 }}>
                 {timeRange}
               </div>
             )}
