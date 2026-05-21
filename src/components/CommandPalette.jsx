@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { createPortal }                                      from 'react-dom'
 import { motion, AnimatePresence }                           from 'framer-motion'
 import { useApp }                                            from '../context/AppContext'
 
@@ -93,7 +94,7 @@ export default function CommandPalette({ open, onClose }) {
     return null
   }
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {open && (
         <>
@@ -104,27 +105,29 @@ export default function CommandPalette({ open, onClose }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-[100]"
-            style={{ background: 'rgba(12,10,8,0.82)', backdropFilter: 'blur(2px)' }}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 9998,
+              background: 'rgba(12,10,8,0.82)', backdropFilter: 'blur(2px)',
+            }}
             onClick={onClose}
           />
 
-          {/* Panel */}
+          {/* Panel — x:'-50%' keeps centering while Framer animates y/scale/opacity */}
           <motion.div
             key="cp-panel"
-            initial={{ opacity: 0, y: -16, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0,   scale: 1 }}
-            exit={{ opacity: 0, y: -16, scale: 0.98 }}
+            initial={{ x: '-50%', opacity: 0, y: -16, scale: 0.98 }}
+            animate={{ x: '-50%', opacity: 1, y: 0,   scale: 1    }}
+            exit   ={{ x: '-50%', opacity: 0, y: -16, scale: 0.98 }}
             transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed z-[101]"
             style={{
-              top:       '18%',
-              left:      '50%',
-              transform: 'translateX(-50%)',
-              width:     'min(600px, 92vw)',
+              position  : 'fixed',
+              top       : '18%',
+              left      : '50%',
+              zIndex    : 9999,
+              width     : 'min(600px, 92vw)',
               background: '#0C0A08',
-              border:    '1px solid rgba(201,168,76,0.35)',
-              boxShadow: '0 24px 64px rgba(0,0,0,0.7)',
+              border    : '1px solid rgba(201,168,76,0.35)',
+              boxShadow : '0 24px 64px rgba(0,0,0,0.7)',
             }}
           >
             {/* Search input */}
@@ -228,6 +231,7 @@ export default function CommandPalette({ open, onClose }) {
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   )
 }

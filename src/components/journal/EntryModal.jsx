@@ -1,6 +1,7 @@
-import { motion, AnimatePresence } from 'framer-motion'
-import { useApp }                   from '../../context/AppContext'
-import { formatRomanDate }          from '../../utils/dateHelpers'
+import { useState, useEffect } from 'react'
+import { useApp }              from '../../context/AppContext'
+import { formatRomanDate }     from '../../utils/dateHelpers'
+import Modal                   from '../ui/Modal'
 
 const INTENSITY_LABELS = ['', 'I', 'II', 'III', 'IV', 'V']
 
@@ -14,45 +15,23 @@ const SECTIONS = [
 export default function EntryModal({ entry, onClose }) {
   const { deleteEntry, showToast } = useApp()
 
-  if (!entry) return null
+  /*
+   * Keep a stable snapshot of the entry so the content stays visible
+   * during the Modal's exit animation (when entry becomes null).
+   */
+  const [snap, setSnap] = useState(entry)
+  useEffect(() => { if (entry) setSnap(entry) }, [entry])
 
   const handleDelete = () => {
-    deleteEntry(entry.date)
+    deleteEntry(snap.date)
     showToast('Entry removed', 'error')
     onClose()
   }
 
   return (
-    <AnimatePresence>
-      <motion.div
-        key="entry-modal-overlay"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        style={{
-          position: 'fixed', inset: 0, zIndex: 1000,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
-          background: 'rgba(12,10,8,0.88)',
-        }}
-        onClick={onClose}
-      >
-        <motion.div
-          key="entry-modal-content"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          style={{
-            width: '100%', maxWidth: 640, zIndex: 1001,
-            background:  'var(--surface)',
-            border:      '1px solid var(--border)',
-            borderTop:   '1px solid rgba(201,168,76,0.4)',
-            padding:     40,
-            maxHeight:   '85vh',
-            overflowY:   'auto',
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
+    <Modal isOpen={!!entry} onClose={onClose}>
+      {snap && (
+        <>
           {/* Header */}
           <div className="flex items-baseline justify-between mb-8">
             <div>
@@ -60,11 +39,11 @@ export default function EntryModal({ entry, onClose }) {
                 className="font-cinzel uppercase tracking-widest"
                 style={{ fontSize: '13px', color: 'var(--gold)', letterSpacing: '0.3em' }}
               >
-                {formatRomanDate(new Date(entry.date + 'T12:00:00'))}
+                {formatRomanDate(new Date(snap.date + 'T12:00:00'))}
               </p>
-              {entry.intensity && (
+              {snap.intensity && (
                 <p className="font-cinzel" style={{ fontSize: '9px', color: 'var(--faint)', letterSpacing: '0.15em', marginTop: 4 }}>
-                  Intensity — {INTENSITY_LABELS[entry.intensity]}
+                  Intensity — {INTENSITY_LABELS[snap.intensity]}
                 </p>
               )}
             </div>
@@ -76,14 +55,14 @@ export default function EntryModal({ entry, onClose }) {
           {/* Sections */}
           <div className="flex flex-col gap-8">
             {SECTIONS.map(({ key, label }) =>
-              entry[key] ? (
+              snap[key] ? (
                 <div key={key}>
                   <p className="section-label" style={{ marginBottom: 10 }}>{label}</p>
                   <p
                     className="font-garamond"
                     style={{ fontSize: '16px', color: 'var(--text)', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}
                   >
-                    {entry[key]}
+                    {snap[key]}
                   </p>
                 </div>
               ) : null
@@ -99,8 +78,8 @@ export default function EntryModal({ entry, onClose }) {
               Delete Entry
             </button>
           </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+        </>
+      )}
+    </Modal>
   )
 }

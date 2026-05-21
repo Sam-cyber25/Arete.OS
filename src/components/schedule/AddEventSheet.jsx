@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { format }                  from 'date-fns'
 import { CAT_COLORS, CATEGORIES }  from './scheduleConstants'
-import { useIsMobile }             from '../../hooks/useIsMobile'
+import Modal                       from '../ui/Modal'
 
 /* ── Duration presets ── */
 const PRESETS = [
@@ -83,8 +82,6 @@ function ToggleRow({ options, value, onChange, getColor }) {
    ADD / EDIT FORM CONTENT
 ───────────────────────────────────────── */
 function FormContent({ editingEvent, defaultTime, selectedDate, onSave, onDelete, onClose }) {
-  const isMobile = useIsMobile()
-
   /* ── Form state ── */
   const [title,       setTitle]       = useState('')
   const [note,        setNote]        = useState('')
@@ -158,22 +155,15 @@ function FormContent({ editingEvent, defaultTime, selectedDate, onSave, onDelete
 
   return (
     <div>
-      {/* Drag handle (mobile) */}
-      {isMobile && (
-        <div className="flex justify-center pt-3 pb-2">
-          <div style={{ width: 40, height: 3, background: '#4A3F32', borderRadius: 99 }} />
-        </div>
-      )}
-
       {/* Header */}
-      <div className="flex items-center justify-between" style={{ padding: isMobile ? '12px 24px 0' : '0 0 16px', marginBottom: isMobile ? 16 : 0 }}>
+      <div className="flex items-center justify-between" style={{ paddingBottom: 16, marginBottom: 16 }}>
         <p className="font-cinzel uppercase" style={{ fontSize: '11px', color: 'var(--bronze)', letterSpacing: '0.26em' }}>
           {editingEvent ? 'Edit Event' : 'Add Event'}
         </p>
         <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--faint)', cursor: 'pointer', fontSize: '16px' }}>✕</button>
       </div>
 
-      <div style={{ padding: isMobile ? '0 24px 40px' : '0', overflowY: 'auto', flex: 1 }}>
+      <div>
 
         {/* Title */}
         <div style={{ marginBottom: 20 }}>
@@ -408,92 +398,16 @@ function FormContent({ editingEvent, defaultTime, selectedDate, onSave, onDelete
    SHEET / MODAL WRAPPER
 ───────────────────────────────────────── */
 export default function AddEventSheet({ open, onClose, editingEvent, defaultTime, selectedDate, onSave, onDelete }) {
-  const isMobile = useIsMobile()
-
   return (
-    <AnimatePresence>
-      {open && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            key="bd"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(12,10,8,0.8)' }}
-            onClick={onClose}
-          />
-
-          {/* Panel */}
-          {isMobile ? (
-            <motion.div
-              key="sheet"
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-              style={{
-                position:   'fixed',
-                left:       0,
-                bottom:     0,
-                width:      '100vw',
-                zIndex:     1001,
-                background: '#13110E',
-                borderTop:  '1px solid rgba(201,168,76,0.4)',
-                maxHeight:  '85vh',
-                overflowY:  'auto',
-                display:    'flex',
-                flexDirection: 'column',
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <FormContent
-                editingEvent={editingEvent}
-                defaultTime={defaultTime}
-                selectedDate={selectedDate}
-                onSave={onSave}
-                onDelete={onDelete}
-                onClose={onClose}
-              />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="modal"
-              initial={{ opacity: 0, scale: 0.96, y: 12 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 12 }}
-              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-              style={{
-                position:   'fixed',
-                top:        '50%',
-                left:       '50%',
-                transform:  'translate(-50%, -50%)',
-                zIndex:     1001,
-                background: '#13110E',
-                border:     '1px solid rgba(201,168,76,0.25)',
-                width:      520,
-                maxWidth:   'calc(100vw - 40px)',
-                maxHeight:  '85vh',
-                overflowY:  'auto',
-                padding:    '28px 32px 36px',
-                display:    'flex',
-                flexDirection: 'column',
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <FormContent
-                editingEvent={editingEvent}
-                defaultTime={defaultTime}
-                selectedDate={selectedDate}
-                onSave={onSave}
-                onDelete={onDelete}
-                onClose={onClose}
-              />
-            </motion.div>
-          )}
-        </>
-      )}
-    </AnimatePresence>
+    <Modal isOpen={open} onClose={onClose}>
+      <FormContent
+        editingEvent={editingEvent}
+        defaultTime={defaultTime}
+        selectedDate={selectedDate}
+        onSave={onSave}
+        onDelete={onDelete}
+        onClose={onClose}
+      />
+    </Modal>
   )
 }

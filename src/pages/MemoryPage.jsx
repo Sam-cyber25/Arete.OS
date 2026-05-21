@@ -1,11 +1,13 @@
-import { useState }               from 'react'
+import { useState, useEffect }     from 'react'
 import { motion, AnimatePresence }  from 'framer-motion'
 import { useApp }                   from '../context/AppContext'
 import NoteCard                     from '../components/memory/NoteCard'
 import AddNotePanel                 from '../components/memory/AddNotePanel'
 import MemorySearch                 from '../components/memory/MemorySearch'
 import OrnamentalDivider            from '../components/layout/OrnamentalDivider'
+import Modal                        from '../components/ui/Modal'
 import { useIsMobile }              from '../hooks/useIsMobile'
+
 const PAGE = {
   initial:    { opacity: 0, y: 8 },
   animate:    { opacity: 1, y: 0 },
@@ -20,6 +22,10 @@ export default function MemoryPage() {
   const [search,    setSearch]    = useState('')
   const [activeTag, setActiveTag] = useState(null)
   const [reading,   setReading]   = useState(null)   // note being read in full
+
+  /* Keep a stable snapshot so Modal exit-animation still has content to show */
+  const [snap, setSnap] = useState(null)
+  useEffect(() => { if (reading) setSnap(reading) }, [reading])
 
   const filtered = notes.filter((n) => {
     if (activeTag && !n.tags.includes(activeTag)) return false
@@ -66,9 +72,9 @@ export default function MemoryPage() {
         style={{ paddingBottom: 20, borderBottom: '1px solid var(--divider)' }}
       >
         {[
-          { label: 'Total',    value: notes.length },
+          { label: 'Total',     value: notes.length },
           { label: 'This Week', value: notesThisWeek },
-          { label: 'Top Tag',  value: mostUsedTag ? `#${mostUsedTag}` : '—' },
+          { label: 'Top Tag',   value: mostUsedTag ? `#${mostUsedTag}` : '—' },
         ].map((s) => (
           <div key={s.label}>
             <p className="font-mono" style={{ fontSize: '24px', color: 'var(--gold)' }}>{s.value}</p>
@@ -90,11 +96,7 @@ export default function MemoryPage() {
           <button
             onClick={() => setActiveTag(null)}
             className="font-mono transition-colors"
-            style={{
-              fontSize:  '10px',
-              color:     !activeTag ? 'var(--gold)' : 'var(--faint)',
-              letterSpacing: '0.05em',
-            }}
+            style={{ fontSize: '10px', color: !activeTag ? 'var(--gold)' : 'var(--faint)', letterSpacing: '0.05em' }}
           >
             All
           </button>
@@ -103,11 +105,7 @@ export default function MemoryPage() {
               key={tag}
               onClick={() => setActiveTag(tag === activeTag ? null : tag)}
               className="font-mono transition-colors"
-              style={{
-                fontSize:     '10px',
-                color:        activeTag === tag ? 'var(--gold)' : 'var(--faint)',
-                letterSpacing:'0.05em',
-              }}
+              style={{ fontSize: '10px', color: activeTag === tag ? 'var(--gold)' : 'var(--faint)', letterSpacing: '0.05em' }}
             >
               #{tag}
             </button>
@@ -143,88 +141,55 @@ export default function MemoryPage() {
       {/* Slide-up add panel */}
       <AddNotePanel open={panelOpen} onClose={() => setPanelOpen(false)} />
 
-      {/* Full-read modal — reuses EntryModal shape but for notes */}
-      {reading && (
-        <AnimatePresence>
-          <motion.div
-            key="note-read-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{
-              position: 'fixed', inset: 0, zIndex: 1000,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
-              background: 'rgba(12,10,8,0.88)',
-            }}
-            onClick={() => setReading(null)}
-          >
-            <motion.div
-              key="note-read-content"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              style={{
-                width: '100%', maxWidth: 640, zIndex: 1001,
-                background:  'var(--surface)',
-                border:      '1px solid var(--border)',
-                borderTop:   '1px solid rgba(201,168,76,0.4)',
-                padding:     40,
-                maxHeight:   '80vh',
-                overflowY:   'auto',
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Title */}
-              {reading.title && (
-                <p
-                  className="font-cormorant"
-                  style={{ fontSize: '26px', color: 'var(--text)', fontWeight: 600, lineHeight: 1.3, marginBottom: 8 }}
-                >
-                  {reading.title}
-                </p>
-              )}
-
-              {/* Meta */}
-              <p className="font-mono" style={{ fontSize: '10px', color: 'var(--faint)', marginBottom: 24 }}>
-                {new Date(reading.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-                {reading.source !== 'manual' && (
-                  <span style={{ marginLeft: 8 }}>[{reading.source}]</span>
-                )}
-              </p>
-
-              {/* Content */}
+      {/* Full-read modal */}
+      <Modal isOpen={!!reading} onClose={() => setReading(null)}>
+        {snap && (
+          <>
+            {/* Title */}
+            {snap.title && (
               <p
-                className="font-garamond"
-                style={{ fontSize: '17px', color: 'var(--text)', lineHeight: 1.85, whiteSpace: 'pre-wrap', marginBottom: 24 }}
+                className="font-cormorant"
+                style={{ fontSize: '26px', color: 'var(--text)', fontWeight: 600, lineHeight: 1.3, marginBottom: 8 }}
               >
-                {reading.content}
+                {snap.title}
               </p>
+            )}
 
-              {/* Tags */}
-              {reading.tags.length > 0 && (
-                <div className="flex flex-wrap gap-3 mb-6">
-                  {reading.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="font-mono"
-                      style={{ fontSize: '10px', color: 'var(--faint)', letterSpacing: '0.05em' }}
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
+            {/* Meta */}
+            <p className="font-mono" style={{ fontSize: '10px', color: 'var(--faint)', marginBottom: 24 }}>
+              {new Date(snap.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+              {snap.source !== 'manual' && (
+                <span style={{ marginLeft: 8 }}>[{snap.source}]</span>
               )}
+            </p>
 
-              <div className="flex justify-end">
-                <button className="btn-ghost" style={{ fontSize: '9px' }} onClick={() => setReading(null)}>
-                  Close
-                </button>
+            {/* Content */}
+            <p
+              className="font-garamond"
+              style={{ fontSize: '17px', color: 'var(--text)', lineHeight: 1.85, whiteSpace: 'pre-wrap', marginBottom: 24 }}
+            >
+              {snap.content}
+            </p>
+
+            {/* Tags */}
+            {snap.tags.length > 0 && (
+              <div className="flex flex-wrap gap-3 mb-6">
+                {snap.tags.map((tag) => (
+                  <span key={tag} className="font-mono" style={{ fontSize: '10px', color: 'var(--faint)', letterSpacing: '0.05em' }}>
+                    #{tag}
+                  </span>
+                ))}
               </div>
-            </motion.div>
-          </motion.div>
-        </AnimatePresence>
-      )}
+            )}
+
+            <div className="flex justify-end">
+              <button className="btn-ghost" style={{ fontSize: '9px' }} onClick={() => setReading(null)}>
+                Close
+              </button>
+            </div>
+          </>
+        )}
+      </Modal>
     </motion.div>
   )
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
-import { motion, AnimatePresence }       from 'framer-motion'
+import { motion }                        from 'framer-motion'
+import Modal                             from '../components/ui/Modal'
 import {
   LineChart, Line, BarChart, Bar,
   XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Cell,
@@ -181,39 +182,10 @@ function LogSheet({ open, onClose, entry, onSave }) {
   const set = (key, val) => setDraft((p) => ({ ...p, [key]: val }))
 
   return (
-    <AnimatePresence>
-      {open && (
-        <>
-          <motion.div
-            key="bd"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(12,10,8,0.82)' }}
-            onClick={onClose}
-          />
-          <motion.div
-            key="sheet"
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-            style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1001,
-              background:  '#0F0D0A',
-              borderTop:   '1px solid rgba(201,168,76,0.4)',
-              maxHeight:   '88vh',
-              overflowY:   'auto',
-              padding:     '20px 24px 48px',
-            }}
-          >
-            <div className="flex justify-center mb-5">
-              <div style={{ width: 40, height: 3, background: '#4A3F32', borderRadius: 99 }} />
-            </div>
-
-            <p className="font-cinzel uppercase" style={{ fontSize: '11px', color: 'var(--bronze)', letterSpacing: '0.26em', marginBottom: 24 }}>
-              Log Today
-            </p>
+    <Modal isOpen={open} onClose={onClose} bottomSheet>
+      <p className="font-cinzel uppercase" style={{ fontSize: '11px', color: 'var(--bronze)', letterSpacing: '0.26em', marginBottom: 24 }}>
+        Log Today
+      </p>
 
             {/* Weight */}
             <div className="mb-6">
@@ -314,10 +286,7 @@ function LogSheet({ open, onClose, entry, onSave }) {
             >
               Save
             </button>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+    </Modal>
   )
 }
 

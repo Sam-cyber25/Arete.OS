@@ -2,8 +2,8 @@ import { useState, useMemo }         from 'react'
 import { motion, AnimatePresence }    from 'framer-motion'
 import { format }                     from 'date-fns'
 import { useBooks }                   from '../hooks/useBooks'
-import { useIsMobile }                from '../hooks/useIsMobile'
 import OrnamentalDivider              from '../components/layout/OrnamentalDivider'
+import Modal                          from '../components/ui/Modal'
 
 const PAGE = {
   initial:    { opacity: 0, y: 8 },
@@ -22,7 +22,7 @@ const STATUS_COLORS = {
 }
 
 /* ─── Book Form ────────────────────────────────────────────── */
-function BookForm({ initial, onSave, onCancel, isMobile }) {
+function BookForm({ initial, onSave, onCancel, isOpen }) {
   const blank = { title: '', author: '', totalPages: '', status: 'QUEUED', pagesRead: 0, startedAt: '', notes: '' }
   const [form, setForm] = useState(initial ? {
     ...blank, ...initial,
@@ -44,38 +44,8 @@ function BookForm({ initial, onSave, onCancel, isMobile }) {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      style={{
-        position:   'fixed',
-        inset:      0,
-        zIndex:     1000,
-        display:    'flex',
-        alignItems: isMobile ? 'flex-end' : 'center',
-        justifyContent: 'center',
-        background: 'rgba(12,10,8,0.80)',
-      }}
-      onClick={onCancel}
-    >
-      <motion.div
-        initial={{ y: isMobile ? 40 : 16, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: isMobile ? 40 : 16, opacity: 0 }}
-        transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
-        style={{
-          background: 'var(--surface)',
-          borderTop:  '1px solid rgba(201,168,76,0.4)',
-          padding:    '20px 24px 36px',
-          width:      '100%',
-          maxWidth:   isMobile ? undefined : 560,
-          maxHeight:  '88vh',
-          overflowY:  'auto',
-          zIndex:     1001,
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Modal isOpen={isOpen} onClose={onCancel}>
+      <>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <p className="font-cinzel uppercase" style={{ fontSize: '9px', color: 'var(--muted)', letterSpacing: '0.24em' }}>
             {initial ? 'Edit Book' : 'Add to Codex'}
@@ -177,8 +147,8 @@ function BookForm({ initial, onSave, onCancel, isMobile }) {
             {initial ? 'Save Changes' : 'Add Book'}
           </button>
         </div>
-      </motion.div>
-    </motion.div>
+      </>
+    </Modal>
   )
 }
 
@@ -351,7 +321,6 @@ function BookCard({ book, onUpdate, onDelete, onEdit }) {
 /* ─── Main Page ────────────────────────────────────────────── */
 export default function CodexPage() {
   const { books, addBook, updateBook, deleteBook, stats } = useBooks()
-  const isMobile   = useIsMobile()
   const [filter,   setFilter]   = useState('ALL')
   const [formData, setFormData] = useState(null) // null | 'add' | book object
 
@@ -473,17 +442,12 @@ export default function CodexPage() {
       </div>
 
       {/* Form sheet */}
-      <AnimatePresence>
-        {formData !== null && (
-          <BookForm
-            key="book-form"
-            initial={formData === 'add' ? null : formData}
-            onSave={handleSave}
-            onCancel={() => setFormData(null)}
-            isMobile={isMobile}
-          />
-        )}
-      </AnimatePresence>
+      <BookForm
+        isOpen={formData !== null}
+        initial={formData === 'add' ? null : formData}
+        onSave={handleSave}
+        onCancel={() => setFormData(null)}
+      />
     </motion.div>
   )
 }
