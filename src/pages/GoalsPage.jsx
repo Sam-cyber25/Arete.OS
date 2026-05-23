@@ -86,8 +86,16 @@ export default function GoalsPage() {
             className="flex flex-col"
           >
             <AnimatePresence mode="popLayout">
-              {goals.map((goal) => (
-                <GoalCard key={goal.id} goal={goal} />
+              {goals.map((goal, idx) => (
+                <motion.div
+                  key={goal.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3, delay: Math.min(idx, 8) * 0.05 }}
+                >
+                  <GoalCard goal={goal} />
+                </motion.div>
               ))}
             </AnimatePresence>
           </motion.div>

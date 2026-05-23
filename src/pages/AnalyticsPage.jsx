@@ -1,4 +1,5 @@
 import { motion }          from 'framer-motion'
+import { useEffect, useState, useRef } from 'react'
 import { useApp }           from '../context/AppContext'
 import WeeklyBar            from '../components/analytics/WeeklyBar'
 import GoalRadar            from '../components/analytics/GoalRadar'
@@ -6,6 +7,7 @@ import NotesLine            from '../components/analytics/NotesLine'
 import ActivityHeatmap      from '../components/analytics/ActivityHeatmap'
 import { getLongestStreak } from '../utils/dateHelpers'
 import OrnamentalDivider    from '../components/layout/OrnamentalDivider'
+import { useIsMobile }      from '../hooks/useIsMobile'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts'
@@ -17,11 +19,49 @@ const PAGE = {
   transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
 }
 
-function ChartCard({ title, subtitle, children }) {
+/* ── Count-up animation hook ── */
+function useCountUp(target, duration = 1200) {
+  const [value, setValue] = useState(0)
+  const rafRef = useRef(null)
+
+  useEffect(() => {
+    if (typeof target !== 'number' || isNaN(target) || target > 10000) {
+      setValue(target)
+      return
+    }
+    const startTime = performance.now()
+    const animate = (now) => {
+      const elapsed  = now - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      const eased    = 1 - Math.pow(1 - progress, 3)   // ease-out cubic
+      setValue(Math.round(eased * target))
+      if (progress < 1) rafRef.current = requestAnimationFrame(animate)
+    }
+    rafRef.current = requestAnimationFrame(animate)
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }
+  }, [target, duration])
+
+  return value
+}
+
+/* ── Animated stat number ── */
+function AnimatedStat({ value }) {
+  const numericValue = typeof value === 'string' && value.endsWith('d')
+    ? parseInt(value, 10)
+    : typeof value === 'number' ? value : null
+
+  const counted = useCountUp(numericValue ?? 0)
+
+  if (numericValue === null) return <>{value}</>
+  if (value.toString().endsWith('d')) return <>{counted}d</>
+  return <>{counted}</>
+}
+
+function ChartCard({ title, subtitle, children, isMobile }) {
   return (
-    <div style={{ border: '1px solid var(--border)', background: 'var(--surface)', padding: 24 }}>
-      <p className="section-label" style={{ marginBottom: subtitle ? 2 : 16 }}>{title}</p>
-      {subtitle && (
+    <div style={{ border: '1px solid var(--border)', background: 'var(--surface)', padding: isMobile ? '16px 12px' : 24 }}>
+      <p className="section-label" style={{ marginBottom: (!isMobile && subtitle) ? 2 : 12 }}>{title}</p>
+      {!isMobile && subtitle && (
         <p className="font-garamond" style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: 16 }}>
           {subtitle}
         </p>
@@ -74,8 +114,8 @@ function StreakLeaderboard({ habits, getHabitStreak }) {
 
   if (ranked.length === 0) {
     return (
-      <p className="font-garamond italic" style={{ color: 'var(--muted)', fontSize: '14px' }}>
-        No active streaks yet — start checking disciplines.
+      <p className="font-cormorant italic" style={{ color: 'var(--muted)', fontSize: '15px' }}>
+        Begin your disciplines.
       </p>
     )
   }
@@ -87,9 +127,7 @@ function StreakLeaderboard({ habits, getHabitStreak }) {
           <span className="font-mono flex-shrink-0" style={{ fontSize: '10px', color: 'var(--muted)', width: 16 }}>
             {i + 1}
           </span>
-          <div
-            style={{ flex: 1, height: 2, background: 'var(--divider)', position: 'relative', overflow: 'hidden' }}
-          >
+          <div style={{ flex: 1, height: 2, background: 'var(--divider)', position: 'relative', overflow: 'hidden' }}>
             <div
               style={{
                 position:   'absolute',
@@ -115,6 +153,7 @@ function StreakLeaderboard({ habits, getHabitStreak }) {
 }
 
 export default function AnalyticsPage() {
+  const isMobile = useIsMobile()
   const {
     tasks, notes, goals, habits,
     getPerfectDays, getWeeklyCompletionData, getHabitStreak,
@@ -151,37 +190,71 @@ export default function AnalyticsPage() {
 
       <OrnamentalDivider opacity={0.15} />
 
-      {/* Summary numbers */}
-      <div className="grid grid-cols-4 gap-0 mb-8" style={{ border: '1px solid var(--border)', background: 'var(--surface)' }}>
-        {summaryStats.map((stat, i) => (
-          <div
-            key={stat.label}
-            className="flex flex-col items-center justify-center py-6"
-            style={{ borderRight: i < summaryStats.length - 1 ? '1px solid var(--divider)' : 'none' }}
-          >
-            <p className="font-mono" style={{ fontSize: '32px', color: 'var(--gold)', lineHeight: 1 }}>{stat.value}</p>
-            <p className="font-cinzel uppercase" style={{ fontSize: '8px', color: 'var(--muted)', letterSpacing: '0.2em', marginTop: 6 }}>
-              {stat.label}
-            </p>
-          </div>
-        ))}
+      {/* Summary numbers — 4-col desktop, 2×2 mobile */}
+      <div
+        className="mb-8"
+        style={{
+          display:             'grid',
+          gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)',
+          border:              '1px solid var(--border)',
+          background:          'var(--surface)',
+        }}
+      >
+        {summaryStats.map((stat, i) => {
+          const isLastRow     = isMobile ? i >= 2 : false
+          const isLastCol     = isMobile ? i % 2 === 1 : i === summaryStats.length - 1
+          const isFirstInRow  = isMobile ? i % 2 === 0 : false
+          return (
+            <div
+              key={stat.label}
+              className="flex flex-col items-center justify-center"
+              style={{
+                padding:     isMobile ? '16px 8px' : '24px',
+                minHeight:   isMobile ? 80 : 'auto',
+                borderRight:  !isLastCol ? '1px solid var(--divider)' : 'none',
+                borderBottom: isMobile && !isLastRow ? '1px solid var(--divider)' : 'none',
+              }}
+            >
+              <p className="font-mono" style={{ fontSize: isMobile ? '28px' : '32px', color: 'var(--gold)', lineHeight: 1 }}>
+                <AnimatedStat value={stat.value} />
+              </p>
+              <p className="font-cinzel uppercase" style={{ fontSize: '8px', color: 'var(--muted)', letterSpacing: '0.2em', marginTop: 6, textAlign: 'center' }}>
+                {stat.label}
+              </p>
+            </div>
+          )
+        })}
       </div>
 
-      {/* Charts grid */}
-      <div className="grid grid-cols-2 gap-6 mb-6">
-        <ChartCard title="Weekly Tasks" subtitle="Completed tasks per day, last 7 days">
+      {/* Charts grid — 2-col desktop, 1-col mobile */}
+      <div
+        style={{
+          display:             'grid',
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+          gap:                 isMobile ? 16 : 24,
+          marginBottom:        isMobile ? 16 : 24,
+        }}
+      >
+        <ChartCard title="Weekly Tasks" subtitle="Completed tasks per day, last 7 days" isMobile={isMobile}>
           <WeeklyBar />
         </ChartCard>
-        <ChartCard title="Goal Progress" subtitle="Radar chart across all 6 domains">
+        <ChartCard title="Goal Progress" subtitle="Radar chart across all 6 domains" isMobile={isMobile}>
           <GoalRadar />
         </ChartCard>
       </div>
 
-      <div className="grid grid-cols-2 gap-6 mb-8">
-        <ChartCard title="Notes per Week" subtitle="Memory entries over last 4 weeks">
+      <div
+        style={{
+          display:             'grid',
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+          gap:                 isMobile ? 16 : 24,
+          marginBottom:        isMobile ? 24 : 32,
+        }}
+      >
+        <ChartCard title="Notes per Week" subtitle="Memory entries over last 4 weeks" isMobile={isMobile}>
           <NotesLine />
         </ChartCard>
-        <ChartCard title="Activity Heatmap" subtitle="Combined task and note activity, last 12 weeks">
+        <ChartCard title="Activity Heatmap" subtitle="Combined task and note activity, last 12 weeks" isMobile={isMobile}>
           <ActivityHeatmap />
         </ChartCard>
       </div>
@@ -205,17 +278,33 @@ export default function AnalyticsPage() {
               Days where all applicable disciplines were completed
             </p>
           </div>
-          <span className="font-cormorant" style={{ fontSize: '64px', color: perfectDays > 0 ? 'var(--gold)' : 'var(--faint)', lineHeight: 1, fontWeight: 600, flexShrink: 0, marginLeft: 24 }}>
-            {perfectDays}
+          <span
+            className="font-cormorant"
+            style={{
+              fontSize:  isMobile ? '48px' : '64px',
+              color:     perfectDays > 0 ? 'var(--gold)' : 'var(--faint)',
+              lineHeight: 1,
+              fontWeight: 600,
+              flexShrink: 0,
+              marginLeft: 24,
+            }}
+          >
+            <AnimatedStat value={perfectDays} />
           </span>
         </div>
 
         {/* Weekly habits bar + streak leaderboard */}
-        <div className="grid grid-cols-2 gap-6">
-          <ChartCard title="Weekly Discipline Score" subtitle="% of habits completed, last 7 days">
+        <div
+          style={{
+            display:             'grid',
+            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+            gap:                 isMobile ? 16 : 24,
+          }}
+        >
+          <ChartCard title="Weekly Discipline Score" subtitle="% of habits completed, last 7 days" isMobile={isMobile}>
             <DisciplineWeekBar data={weeklyData} />
           </ChartCard>
-          <ChartCard title="Streak Leaderboard" subtitle="Habits ranked by current streak">
+          <ChartCard title="Streak Leaderboard" subtitle="Habits ranked by current streak" isMobile={isMobile}>
             <StreakLeaderboard habits={habits || []} getHabitStreak={getHabitStreak} />
           </ChartCard>
         </div>

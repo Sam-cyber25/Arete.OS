@@ -1,6 +1,7 @@
 import { useState, useMemo }                        from 'react'
 import { format, addDays, startOfWeek }             from 'date-fns'
 import { getEventsForDate }                         from './scheduleConstants'
+import { useIsMobile }                              from '../../hooks/useIsMobile'
 
 const TODAY      = format(new Date(), 'yyyy-MM-dd')
 const DAY_ABBRS  = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
@@ -59,13 +60,14 @@ function DaySummary({ dayEvts }) {
 }
 
 export default function WeekStrip({ selectedDate, onSelectDate, events }) {
+  const isMobile   = useIsMobile()
   const [weekStart, setWeekStart] = useState(() =>
     startOfWeek(new Date(selectedDate + 'T00:00:00'), { weekStartsOn: 1 })
   )
   const [hoveredIdx, setHoveredIdx] = useState(null)
 
   const days       = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart])
-  const monthLabel = format(addDays(weekStart, 3), 'MMMM, yyyy')
+  const monthLabel = format(addDays(weekStart, 3), isMobile ? 'MMM yyyy' : 'MMMM, yyyy')
 
   /* Pre-compute events for each of the 7 visible days — NO hooks in loops */
   const weekEvts = useMemo(
@@ -76,46 +78,84 @@ export default function WeekStrip({ selectedDate, onSelectDate, events }) {
   const prevWeek = () => setWeekStart((ws) => addDays(ws, -7))
   const nextWeek = () => setWeekStart((ws) => addDays(ws,  7))
 
+  const STRIP_H = isMobile ? 88 : 72
+
   return (
     <div
       style={{
-        height:       72,
+        height:       STRIP_H,
         flexShrink:   0,
         display:      'flex',
         background:   '#0C0A08',
         borderBottom: '1px solid #2A2520',
       }}
     >
-      {/* ── Left panel ── */}
-      <div
-        style={{
-          width:           200,
-          flexShrink:      0,
-          padding:         '0 20px',
-          display:         'flex',
-          flexDirection:   'column',
-          justifyContent:  'center',
-          borderRight:     '1px solid #2A2520',
-        }}
-      >
-        <p className="font-cinzel uppercase" style={{ fontSize: '7px', color: 'var(--faint)', letterSpacing: '0.25em', marginBottom: 4 }}>
-          Calendarium
-        </p>
-        <div className="flex items-center gap-2">
-          <button onClick={prevWeek} style={{ background: 'none', border: 'none', color: 'var(--faint)', cursor: 'pointer', fontSize: '14px', lineHeight: 1, padding: '0 4px' }}>
+      {/* ── Left panel — desktop only ── */}
+      {!isMobile && (
+        <div
+          style={{
+            width:           200,
+            flexShrink:      0,
+            padding:         '0 20px',
+            display:         'flex',
+            flexDirection:   'column',
+            justifyContent:  'center',
+            borderRight:     '1px solid #2A2520',
+          }}
+        >
+          <p className="font-cinzel uppercase" style={{ fontSize: '7px', color: 'var(--faint)', letterSpacing: '0.25em', marginBottom: 4 }}>
+            Calendarium
+          </p>
+          <div className="flex items-center gap-2">
+            <button onClick={prevWeek} style={{ background: 'none', border: 'none', color: 'var(--faint)', cursor: 'pointer', fontSize: '14px', lineHeight: 1, padding: '0 4px' }}>
+              ←
+            </button>
+            <p className="font-cormorant italic" style={{ fontSize: '17px', color: 'var(--text)', flex: 1, textAlign: 'center' }}>
+              {monthLabel}
+            </p>
+            <button onClick={nextWeek} style={{ background: 'none', border: 'none', color: 'var(--faint)', cursor: 'pointer', fontSize: '14px', lineHeight: 1, padding: '0 4px' }}>
+              →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Mobile month + week nav ── */}
+      {isMobile && (
+        <div
+          style={{
+            display:        'flex',
+            alignItems:     'center',
+            justifyContent: 'space-between',
+            paddingBottom:  8,
+            position:       'absolute',
+            top:            4,
+            left:           12,
+            right:          12,
+            pointerEvents:  'none',
+            zIndex:         2,
+          }}
+        >
+          <button
+            onClick={prevWeek}
+            style={{ background: 'none', border: 'none', color: 'var(--faint)', cursor: 'pointer', fontSize: '14px', lineHeight: 1, padding: '4px 6px', pointerEvents: 'all' }}
+          >
             ←
           </button>
-          <p className="font-cormorant italic" style={{ fontSize: '17px', color: 'var(--text)', flex: 1, textAlign: 'center' }}>
+          <span className="font-cinzel" style={{ fontSize: '8px', color: 'var(--faint)', letterSpacing: '0.22em' }}>
             {monthLabel}
-          </p>
-          <button onClick={nextWeek} style={{ background: 'none', border: 'none', color: 'var(--faint)', cursor: 'pointer', fontSize: '14px', lineHeight: 1, padding: '0 4px' }}>
+          </span>
+          <button
+            onClick={nextWeek}
+            style={{ background: 'none', border: 'none', color: 'var(--faint)', cursor: 'pointer', fontSize: '14px', lineHeight: 1, padding: '4px 6px', pointerEvents: 'all' }}
+          >
             →
           </button>
         </div>
-      </div>
+      )}
 
       {/* ── Day columns ── */}
-      <div className="flex flex-1">
+      <div className="flex flex-1" style={isMobile ? { paddingTop: 24 } : undefined}>
         {days.map((day, idx) => {
           const dateStr    = toDateStr(day)
           const isToday    = dateStr === TODAY
@@ -127,9 +167,9 @@ export default function WeekStrip({ selectedDate, onSelectDate, events }) {
           return (
             <div
               key={dateStr}
-              style={{ flex: 1, position: 'relative' }}
-              onMouseEnter={() => setHoveredIdx(idx)}
-              onMouseLeave={() => setHoveredIdx(null)}
+              style={{ flex: 1, minWidth: isMobile ? 52 : 'auto', position: 'relative' }}
+              onMouseEnter={() => !isMobile && setHoveredIdx(idx)}
+              onMouseLeave={() => !isMobile && setHoveredIdx(null)}
             >
               <button
                 onClick={() => onSelectDate(dateStr)}
@@ -145,8 +185,8 @@ export default function WeekStrip({ selectedDate, onSelectDate, events }) {
                   flexDirection:   'column',
                   alignItems:      'center',
                   justifyContent:  'center',
-                  gap:             2,
-                  padding:         '4px 0 2px',
+                  gap:             isMobile ? 4 : 2,
+                  padding:         isMobile ? '8px 4px 6px' : '4px 0 2px',
                   position:        'relative',
                   transition:      'background 0.15s',
                 }}
@@ -158,7 +198,7 @@ export default function WeekStrip({ selectedDate, onSelectDate, events }) {
                 <span
                   className="font-cinzel"
                   style={{
-                    fontSize:      '8px',
+                    fontSize:      isMobile ? '7px' : '8px',
                     letterSpacing: '0.14em',
                     color:         isSelected ? 'var(--gold)' : isToday ? '#E8DFC8' : 'var(--faint)',
                     lineHeight:    1,
@@ -170,10 +210,11 @@ export default function WeekStrip({ selectedDate, onSelectDate, events }) {
                 <span
                   className="font-cormorant"
                   style={{
-                    fontSize:   '22px',
+                    fontSize:   isMobile ? '24px' : '22px',
                     color:      isSelected ? 'var(--gold)' : isToday ? '#E8DFC8' : 'var(--text)',
                     lineHeight: 1,
                     fontWeight: isSelected ? 600 : 400,
+                    marginTop:  isMobile ? 2 : 0,
                   }}
                 >
                   {format(day, 'd')}
@@ -190,7 +231,7 @@ export default function WeekStrip({ selectedDate, onSelectDate, events }) {
                 )}
               </button>
 
-              {hoveredIdx === idx && <DaySummary dayEvts={dayEvts} />}
+              {!isMobile && hoveredIdx === idx && <DaySummary dayEvts={dayEvts} />}
             </div>
           )
         })}

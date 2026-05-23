@@ -2,11 +2,18 @@ import { useState }         from 'react'
 import { useApp }            from '../../context/AppContext'
 import { getHeatmapData }    from '../../utils/dateHelpers'
 import { format }            from 'date-fns'
+import { useIsMobile }       from '../../hooks/useIsMobile'
 
 export default function ActivityHeatmap() {
+  const isMobile          = useIsMobile()
   const { tasks, notes }  = useApp()
   const [tooltip, setTooltip] = useState(null)
-  const data    = getHeatmapData(tasks, notes)
+  const allData = getHeatmapData(tasks, notes)
+  // Show only last 8 weeks on mobile, 12 on desktop
+  const data    = isMobile ? allData.slice(-56) : allData
+
+  const SQUARE  = isMobile ? 8 : 6
+  const GAP     = isMobile ? 3 : 2
 
   const weeks = []
   for (let i = 0; i < data.length; i += 7) weeks.push(data.slice(i, i + 7))
@@ -28,12 +35,12 @@ export default function ActivityHeatmap() {
     <div className="relative">
       <div className="flex gap-2">
         {/* Day labels */}
-        <div className="flex flex-col mt-6" style={{ gap: '2px' }}>
+        <div className="flex flex-col mt-6" style={{ gap: `${GAP}px` }}>
           {dayLabels.map((d, i) => (
             <div
               key={i}
               className="font-mono flex items-center justify-center"
-              style={{ width: 6, height: 6, fontSize: '7px', color: 'var(--faint)' }}
+              style={{ width: SQUARE, height: SQUARE, fontSize: '7px', color: 'var(--faint)' }}
             >
               {d}
             </div>
@@ -41,9 +48,9 @@ export default function ActivityHeatmap() {
         </div>
 
         {/* Grid */}
-        <div className="flex overflow-x-auto" style={{ gap: '2px' }}>
+        <div className="flex overflow-x-auto" style={{ gap: `${GAP}px` }}>
           {weeks.map((week, wi) => (
-            <div key={wi} className="flex flex-col" style={{ gap: '2px' }}>
+            <div key={wi} className="flex flex-col" style={{ gap: `${GAP}px` }}>
               {/* Month label */}
               <div style={{ height: 20 }} className="flex items-center">
                 {wi > 0 && week[0] && new Date(week[0].date).getDate() <= 7 && (
@@ -59,8 +66,8 @@ export default function ActivityHeatmap() {
                 <div
                   key={di}
                   style={{
-                    width:      6,
-                    height:     6,
+                    width:      SQUARE,
+                    height:     SQUARE,
                     background: getColor(day.count),
                     cursor:     'pointer',
                     flexShrink: 0,
@@ -109,8 +116,8 @@ export default function ActivityHeatmap() {
           <div
             key={i}
             style={{
-              width:      6,
-              height:     6,
+              width:      SQUARE,
+              height:     SQUARE,
               background: getColor(Math.round(v * maxCount)),
             }}
           />

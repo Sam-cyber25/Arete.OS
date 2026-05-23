@@ -45,16 +45,20 @@ export default function HorizontalTimeline({
     return () => clearInterval(id)
   }, [])
 
-  /* ── Auto-scroll to current time (or start) when date changes ── */
+  /* ── Auto-scroll to current time minus ~1hr of context when date changes ── */
   useEffect(() => {
     if (!scrollRef.current) return
-    const cw = scrollRef.current.clientWidth
-    let target = 0
+    const cw     = scrollRef.current.clientWidth
+    let target   = 0
     if (isToday) {
       const cx = currentTimeX()
-      if (cx >= 0) target = Math.max(0, cx - cw / 3)
+      if (cx >= 0) {
+        // Show 1 hour of context before the current-time needle
+        const oneHour = HOUR_PX
+        target = Math.max(0, cx - oneHour - cw / 6)
+      }
     }
-    scrollRef.current.scrollLeft = target
+    scrollRef.current.scrollTo({ left: target, behavior: 'smooth' })
   }, [selectedDate, isToday])
 
   /* ── Virtual rendering: track scrollLeft ── */
@@ -225,11 +229,12 @@ export default function HorizontalTimeline({
         {/* Content: ruler + event rows */}
         <div
           style={{
-            width:    TIMELINE_W,
-            minHeight:'100%',
-            position: 'relative',
-            display:  'flex',
+            width:         TIMELINE_W,
+            minHeight:     '100%',
+            position:      'relative',
+            display:       'flex',
             flexDirection: 'column',
+            paddingBottom: isMobile ? 100 : 0,
           }}
         >
           <TimeRuler isToday={isToday} currentX={isToday ? nowX : null} />

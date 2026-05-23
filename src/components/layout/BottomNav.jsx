@@ -182,8 +182,23 @@ export default function BottomNav() {
               key={item.id}
               onClick={() => handlePrimary(item.id)}
               className="flex flex-col items-center justify-center flex-1 h-full transition-colors"
-              style={{ minWidth: 0 }}
+              style={{ minWidth: 0, position: 'relative' }}
             >
+              {active && (
+                <motion.div
+                  layoutId="activeTabBar"
+                  style={{
+                    position:   'absolute',
+                    top:        0,
+                    left:       '10%',
+                    right:      '10%',
+                    height:     2,
+                    background: 'var(--gold)',
+                    borderRadius: 1,
+                  }}
+                  transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                />
+              )}
               <span
                 className="font-mono"
                 style={{ fontSize: '13px', color: active ? 'var(--gold)' : 'var(--faint)', lineHeight: 1, marginBottom: 3 }}

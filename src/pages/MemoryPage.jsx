@@ -127,13 +127,20 @@ export default function MemoryPage() {
               : 'No memories recorded yet. Begin with a thought.'}
           </motion.p>
         ) : (
-          filtered.map((note) => (
-            <NoteCard
+          filtered.map((note, idx) => (
+            <motion.div
               key={note.id}
-              note={note}
-              onTagClick={(tag) => setActiveTag(tag === activeTag ? null : tag)}
-              onReadClick={(n) => setReading(n)}
-            />
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3, delay: Math.min(idx, 8) * 0.05 }}
+            >
+              <NoteCard
+                note={note}
+                onTagClick={(tag) => setActiveTag(tag === activeTag ? null : tag)}
+                onReadClick={(n) => setReading(n)}
+              />
+            </motion.div>
           ))
         )}
       </AnimatePresence>

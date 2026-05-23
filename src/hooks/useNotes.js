@@ -2,7 +2,7 @@ import { useLocalStorage } from './useLocalStorage'
 import { isThisWeek } from 'date-fns'
 
 // ── Version-keyed seed: forces re-seed of default notes on version bump ──
-const NOTES_SEED_KEY = 'arete_memory_seeded_v3'
+const NOTES_SEED_KEY = 'arete_memory_seeded_v4'
 if (!localStorage.getItem(NOTES_SEED_KEY)) {
   localStorage.removeItem('arete_notes')
   localStorage.setItem(NOTES_SEED_KEY, '1')

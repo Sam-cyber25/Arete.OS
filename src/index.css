@@ -110,9 +110,11 @@ input:focus, textarea:focus, select:focus { outline: none; }
   border-radius: 2px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.5);
   padding: 24px;
-  transition: border-color 180ms ease;
+  transition: border-color 180ms ease, transform 180ms ease;
 }
-.card:hover { border-color: var(--faint); }
+@media (hover: hover) {
+  .card:hover { border-color: #3D3428; transform: translateY(-1px); }
+}
 .card-gold-top { border-top: 1px solid rgba(201,168,76,0.4); }
 
 /* ─── Button system ─────────────────────────────────────────── */
@@ -522,6 +524,16 @@ input[type='range']::-webkit-slider-thumb {
   min-height: 44px;
 }
 .day-chip.selected { border-bottom-color: var(--gold); }
+
+/* ─── Respect prefers-reduced-motion ───────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration:       0.01ms !important;
+    animation-iteration-count: 1     !important;
+    transition-duration:      0.01ms !important;
+    scroll-behavior:          auto   !important;
+  }
+}
 
 /* ─── Perfect Day shimmer ───────────────────────────────────── */
 @keyframes shimmerGold {

@@ -1,7 +1,8 @@
 import {
   ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, Tooltip,
 } from 'recharts'
-import { useApp } from '../../context/AppContext'
+import { useApp }      from '../../context/AppContext'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const CustomTooltip = ({ active, payload }) => {
   if (!active || !payload?.length) return null
@@ -33,7 +34,8 @@ const SHORT_LABELS = {
 }
 
 export default function GoalRadar() {
-  const { goals } = useApp()
+  const { goals }  = useApp()
+  const isMobile   = useIsMobile()
 
   const data = goals.map((g) => ({
     subject:  SHORT_LABELS[g.title] || g.category,
@@ -42,7 +44,7 @@ export default function GoalRadar() {
   }))
 
   return (
-    <ResponsiveContainer width="100%" height={240}>
+    <ResponsiveContainer width="100%" height={isMobile ? 180 : 240}>
       <RadarChart data={data} margin={{ top: 10, right: 40, bottom: 10, left: 40 }}>
         <PolarGrid
           stroke="var(--divider)"

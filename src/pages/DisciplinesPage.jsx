@@ -412,16 +412,22 @@ export default function DisciplinesPage() {
         className={isMobile ? 'flex flex-col gap-2' : 'grid gap-2 mb-8'}
         style={isMobile ? { marginBottom: 24 } : { gridTemplateColumns: '1fr 1fr' }}
       >
-        {habits.map((habit) => (
-          <HabitCard
+        {habits.map((habit, idx) => (
+          <motion.div
             key={habit.id}
-            habit={habit}
-            completed={!!todayCompletions[habit.id]}
-            streak={getHabitStreak(habit.id)}
-            onToggle={() => toggleHabit(habit.id)}
-            onDelete={() => deleteHabit(habit.id)}
-            onEditName={(name) => updateHabit(habit.id, { name })}
-          />
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: Math.min(idx, 8) * 0.04 }}
+          >
+            <HabitCard
+              habit={habit}
+              completed={!!todayCompletions[habit.id]}
+              streak={getHabitStreak(habit.id)}
+              onToggle={() => toggleHabit(habit.id)}
+              onDelete={() => deleteHabit(habit.id)}
+              onEditName={(name) => updateHabit(habit.id, { name })}
+            />
+          </motion.div>
         ))}
       </div>
 
