@@ -49,7 +49,7 @@ const NoteCard = memo(function NoteCard({ note, onTagClick, onReadClick }) {
               <button
                 onClick={() => onReadClick && onReadClick(note)}
                 className="font-cormorant text-left w-full"
-                style={{ fontSize: '18px', color: 'var(--text)', fontWeight: 600, lineHeight: 1.3, marginBottom: 4 }}
+                style={{ fontSize: '20px', color: 'var(--text)', fontWeight: 600, lineHeight: 1.3, marginBottom: 4 }}
               >
                 {note.title}
               </button>
@@ -102,7 +102,7 @@ const NoteCard = memo(function NoteCard({ note, onTagClick, onReadClick }) {
       ) : (
         <p
           className="font-garamond line-clamp-2 mb-3"
-          style={{ color: 'var(--muted)', fontSize: '15px', lineHeight: 1.65 }}
+          style={{ color: 'var(--muted)', fontSize: '16px', lineHeight: 1.65 }}
         >
           {note.content}
         </p>
@@ -124,7 +124,7 @@ const NoteCard = memo(function NoteCard({ note, onTagClick, onReadClick }) {
               key={tag}
               onClick={() => onTagClick && onTagClick(tag)}
               className="font-mono transition-colors"
-              style={{ fontSize: '10px', color: 'var(--faint)', letterSpacing: '0.05em' }}
+              style={{ fontSize: '11px', color: 'var(--faint)', letterSpacing: '0.05em' }}
             >
               #{tag}
             </button>

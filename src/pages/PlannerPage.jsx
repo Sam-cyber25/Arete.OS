@@ -66,13 +66,13 @@ function RoutineBlock({ event }) {
     >
       <div style={{ width: 2, height: '100%', minHeight: 36, background: color, flexShrink: 0, borderRadius: 1 }} />
       <div className="flex-1 min-w-0">
-        <span className="font-mono" style={{ fontSize: '10px', color: 'var(--faint)', display: 'block', marginBottom: 1 }}>
+        <span className="font-mono" style={{ fontSize: '12px', color: 'var(--faint)', display: 'block', marginBottom: 1 }}>
           {format(start, 'h:mm a')}
         </span>
-        <span className="font-cinzel" style={{ fontSize: '8px', color, letterSpacing: '0.1em', display: 'block', marginBottom: 2 }}>
+        <span className="font-cinzel" style={{ fontSize: '11px', color, letterSpacing: '0.1em', display: 'block', marginBottom: 2 }}>
           {label}
         </span>
-        <span className="font-garamond" style={{ fontSize: '14px', color: 'var(--text)', lineHeight: 1.3 }}>
+        <span className="font-garamond" style={{ fontSize: '16px', color: 'var(--text)', lineHeight: 1.3 }}>
           {event.title}
         </span>
       </div>
@@ -102,14 +102,14 @@ function IntentionRow({ intention, onUpdate, onDelete }) {
       }}
     >
       <div className="flex items-center gap-3 mb-1">
-        <span className="font-mono" style={{ fontSize: '10px', color: 'var(--faint)', flexShrink: 0 }}>
+        <span className="font-mono" style={{ fontSize: '12px', color: 'var(--faint)', flexShrink: 0 }}>
           {intention.time}
         </span>
-        <span className="font-cinzel" style={{ fontSize: '8px', color: catColor, letterSpacing: '0.1em', flexShrink: 0 }}>
+        <span className="font-cinzel" style={{ fontSize: '11px', color: catColor, letterSpacing: '0.1em', flexShrink: 0 }}>
           {catLabel}
         </span>
         <span className="font-cinzel uppercase" style={{
-          fontSize: '8px',
+          fontSize: '11px',
           letterSpacing: '0.1em',
           color: intention.priority === 'high' ? 'var(--gold)' : intention.priority === 'mid' ? 'var(--bronze)' : 'var(--faint)',
         }}>
@@ -117,7 +117,7 @@ function IntentionRow({ intention, onUpdate, onDelete }) {
         </span>
       </div>
 
-      <p className="font-garamond" style={{ fontSize: '16px', color: 'var(--text)', lineHeight: 1.3 }}>
+      <p className="font-garamond" style={{ fontSize: '17px', color: 'var(--text)', lineHeight: 1.3 }}>
         {intention.task}
       </p>
 
@@ -290,11 +290,11 @@ function FullPicture({ fixedBlocks, intentions }) {
             className="flex items-start gap-3 py-2"
             style={{ borderBottom: '1px solid var(--divider)' }}
           >
-            <span className="font-mono flex-shrink-0" style={{ fontSize: '10px', color: 'var(--faint)', width: 46 }}>
+            <span className="font-mono flex-shrink-0" style={{ fontSize: '12px', color: 'var(--faint)', width: 50 }}>
               {item.time}
             </span>
             <div style={{ width: 2, minHeight: 20, background: color, flexShrink: 0, borderRadius: 1, opacity: item.type === 'fixed' ? 0.6 : 1 }} />
-            <span className="font-garamond" style={{ fontSize: '14px', color: item.type === 'fixed' ? 'var(--muted)' : 'var(--text)' }}>
+            <span className="font-garamond" style={{ fontSize: '16px', color: item.type === 'fixed' ? 'var(--muted)' : 'var(--text)' }}>
               {item.label}
             </span>
             {item.type === 'intention' && item.priority === 'high' && (
@@ -514,7 +514,7 @@ export default function PlannerPage() {
             <div style={{ padding: '20px 24px' }}>
               <div className="flex items-center justify-between mb-4">
                 <p className="section-label">Tomorrow's Intentions</p>
-                <span className="font-mono" style={{ fontSize: '10px', color: 'var(--muted)' }}>
+                <span className="font-mono" style={{ fontSize: '12px', color: 'var(--muted)' }}>
                   {(plan.intentions || []).length} added
                 </span>
               </div>
@@ -543,8 +543,8 @@ export default function PlannerPage() {
 
               {!showAddForm && (
                 <button
-                  className="font-cinzel uppercase"
-                  style={{ fontSize: '9px', color: 'var(--gold)', letterSpacing: '0.2em', marginTop: 16, display: 'block', minHeight: 44 }}
+                  className="font-cinzel uppercase toggle-link"
+                  style={{ fontSize: '13px', color: 'var(--gold)', letterSpacing: '0.18em', marginTop: 16, display: 'block', minHeight: 44 }}
                   onClick={() => setShowAddForm(true)}
                 >
                   + Add Intention
@@ -554,8 +554,8 @@ export default function PlannerPage() {
               {/* Carry forward */}
               <div style={{ marginTop: 24, borderTop: '1px solid var(--divider)', paddingTop: 16 }}>
                 <button
-                  className="font-cinzel uppercase"
-                  style={{ fontSize: '8px', color: 'var(--gold)', letterSpacing: '0.18em', minHeight: 44 }}
+                  className="font-cinzel uppercase toggle-link"
+                  style={{ fontSize: '13px', color: 'var(--gold)', letterSpacing: '0.18em', minHeight: 44 }}
                   onClick={() => setShowCarry((p) => !p)}
                 >
                   {showCarry ? '↑ Hide' : '↓ Carry from today?'}

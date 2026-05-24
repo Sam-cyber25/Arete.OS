@@ -37,6 +37,17 @@ const TaskItem = memo(function TaskItem({ task }) {
         {task.title}
       </span>
 
+      {/* Goal link indicator */}
+      {task.linkedSubtaskId && (
+        <span
+          className="flex-shrink-0 font-mono"
+          style={{ fontSize: '9px', color: 'var(--gold)' }}
+          title="Linked to a goal subtask"
+        >
+          ◆
+        </span>
+      )}
+
       {/* Priority mark */}
       <span
         className="font-cinzel uppercase flex-shrink-0"

@@ -29,7 +29,7 @@ export default function DayHeader({ date, events, onAddEvent }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <span
             className="font-cormorant italic"
-            style={{ fontSize: '28px', color: 'var(--text)', lineHeight: 1, fontWeight: 500 }}
+            style={{ fontSize: '36px', color: 'var(--text)', lineHeight: 1, fontWeight: 500 }}
           >
             {dayName}
           </span>
@@ -96,7 +96,7 @@ export default function DayHeader({ date, events, onAddEvent }) {
         <div className="flex items-center gap-3">
           <span
             className="font-cormorant italic"
-            style={{ fontSize: '28px', color: 'var(--text)', lineHeight: 1, fontWeight: 500 }}
+            style={{ fontSize: '36px', color: 'var(--text)', lineHeight: 1, fontWeight: 500 }}
           >
             {dayName}
           </span>

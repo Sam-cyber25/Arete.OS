@@ -7,15 +7,16 @@ export function useTasks() {
   const addTask = (task) =>
     setTasks((prev) => [
       {
-        id: `t${Date.now()}`,
-        title: task.title,
-        priority: task.priority || 'medium',
-        goalId: task.goalId || null,
-        dueDate: task.dueDate || null,
-        completed: false,
-        completedAt: null,
-        createdAt: new Date().toISOString(),
-        source: task.source || 'manual',
+        id:              task.id || `t${Date.now()}`,
+        title:           task.title,
+        priority:        task.priority || 'medium',
+        goalId:          task.goalId || null,
+        linkedSubtaskId: task.linkedSubtaskId || null,
+        dueDate:         task.dueDate || null,
+        completed:       false,
+        completedAt:     null,
+        createdAt:       new Date().toISOString(),
+        source:          task.source || 'manual',
       },
       ...prev,
     ])

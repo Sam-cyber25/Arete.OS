@@ -75,7 +75,7 @@ export default function JournalEditor() {
               onClick={() => setForm((p) => ({ ...p, intensity: v }))}
               className="font-cinzel transition-colors"
               style={{
-                fontSize:      '11px',
+                fontSize:      '12px',
                 letterSpacing: '0.15em',
                 padding:       '6px 16px',
                 border:        '1px solid var(--border)',

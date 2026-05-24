@@ -270,7 +270,7 @@ export default function VoiceOfAncients() {
       <p
         className="font-cinzel uppercase"
         style={{
-          fontSize:      '9px',
+          fontSize:      '12px',
           letterSpacing: '0.28em',
           color:         'var(--gold)',
           marginBottom:  20,
@@ -284,7 +284,7 @@ export default function VoiceOfAncients() {
       <motion.p
         className="font-cormorant italic"
         style={{
-          fontSize:   '19px',
+          fontSize:   '22px',
           lineHeight: 1.65,
           color:      'var(--text)',
           maxWidth:   680,
@@ -312,7 +312,7 @@ export default function VoiceOfAncients() {
         animate={{ opacity: 1 }}
         transition={{ delay: words.length * 0.045 + 0.4, duration: 0.5 }}
         style={{
-          fontSize:      '9px',
+          fontSize:      '12px',
           letterSpacing: '0.2em',
           color:         'var(--muted)',
           position:      'relative',

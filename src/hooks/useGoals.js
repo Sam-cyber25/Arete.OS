@@ -37,11 +37,17 @@ export function useGoals() {
   const deleteGoal = (id) =>
     setGoals((prev) => prev.filter((g) => g.id !== id))
 
-  const addSubtask = (goalId, text) =>
+  const addSubtask = (goalId, text, subtaskId = null, linkedTaskId = null) =>
     setGoals((prev) =>
       prev.map((g) => {
         if (g.id !== goalId) return g
-        const subtasks = [...(g.subtasks || []), { id: `st${Date.now()}`, title: text, completed: false }]
+        const newSt = {
+          id:         subtaskId || `st${Date.now()}`,
+          title:      text,
+          completed:  false,
+          ...(linkedTaskId ? { linkedTaskId } : {}),
+        }
+        const subtasks = [...(g.subtasks || []), newSt]
         return { ...g, subtasks, progress: calcProgress(subtasks) }
       })
     )

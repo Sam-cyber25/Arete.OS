@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from 'react'
+import { createContext, useContext, useState, useCallback, useRef } from 'react'
 import { useGoals }       from '../hooks/useGoals'
 import { useTasks }       from '../hooks/useTasks'
 import { useNotes }       from '../hooks/useNotes'
@@ -26,6 +26,46 @@ export function AppProvider({ children }) {
   const scheduleApi    = useSchedule()
   const journalApi     = useJournal()
   const disciplinesApi = useDisciplines()
+
+  /* ── Cross-link sync: prevent re-entrant loops ── */
+  const syncingRef = useRef(false)
+
+  const toggleTaskWithSync = useCallback((id) => {
+    if (syncingRef.current) return
+    syncingRef.current = true
+    try {
+      const task = tasksApi.tasks.find((t) => t.id === id)
+      tasksApi.toggleTask(id)
+      if (task?.goalId && task?.linkedSubtaskId) {
+        const goal    = goalsApi.goals.find((g) => g.id === task.goalId)
+        const subtask = goal?.subtasks?.find((st) => st.id === task.linkedSubtaskId)
+        if (subtask && subtask.completed === task.completed) {
+          // subtask is out of sync — toggle it to match new task state
+          goalsApi.toggleSubtask(task.goalId, task.linkedSubtaskId)
+        }
+      }
+    } finally {
+      syncingRef.current = false
+    }
+  }, [tasksApi, goalsApi])
+
+  const toggleSubtaskWithSync = useCallback((goalId, subtaskId) => {
+    if (syncingRef.current) return
+    syncingRef.current = true
+    try {
+      const goal    = goalsApi.goals.find((g) => g.id === goalId)
+      const subtask = goal?.subtasks?.find((st) => st.id === subtaskId)
+      goalsApi.toggleSubtask(goalId, subtaskId)
+      if (subtask?.linkedTaskId) {
+        const task = tasksApi.tasks.find((t) => t.id === subtask.linkedTaskId)
+        if (task && task.completed === subtask.completed) {
+          tasksApi.toggleTask(subtask.linkedTaskId)
+        }
+      }
+    } finally {
+      syncingRef.current = false
+    }
+  }, [goalsApi, tasksApi])
 
   const showToast = useCallback((message, type = 'success') => {
     const id = Date.now()
@@ -80,6 +120,9 @@ export function AppProvider({ children }) {
         clearAllData,
         ...goalsApi,
         ...tasksApi,
+        /* synced cross-link overrides */
+        toggleTask:    toggleTaskWithSync,
+        toggleSubtask: toggleSubtaskWithSync,
         ...notesApi,
         events:      scheduleApi.events,
         addEvent:    scheduleApi.addEvent,

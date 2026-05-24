@@ -107,10 +107,10 @@ export default function BottomNav() {
                       background:   active ? '#1A1610' : 'transparent',
                     }}
                   >
-                    <span className="font-mono flex-shrink-0" style={{ fontSize: '11px', color: active ? 'var(--gold)' : 'var(--faint)', width: 30 }}>
+                    <span className="font-mono flex-shrink-0" style={{ fontSize: '13px', color: active ? 'var(--gold)' : 'var(--faint)', width: 34 }}>
                       {item.numeral}
                     </span>
-                    <span className="font-cinzel uppercase" style={{ fontSize: '11px', letterSpacing: '0.2em', color: active ? 'var(--gold)' : 'var(--muted)' }}>
+                    <span className="font-cinzel uppercase" style={{ fontSize: '13px', letterSpacing: '0.18em', color: active ? 'var(--gold)' : 'var(--muted)' }}>
                       {item.label}
                     </span>
                     {active && <div style={{ marginLeft: 'auto', width: 4, height: 4, background: 'var(--gold)', borderRadius: '50%' }} />}
@@ -201,13 +201,13 @@ export default function BottomNav() {
               )}
               <span
                 className="font-mono"
-                style={{ fontSize: '13px', color: active ? 'var(--gold)' : 'var(--faint)', lineHeight: 1, marginBottom: 3 }}
+                style={{ fontSize: '14px', color: active ? 'var(--gold)' : 'var(--faint)', lineHeight: 1, marginBottom: 3 }}
               >
                 {item.numeral}
               </span>
               <span
                 className="font-cinzel"
-                style={{ fontSize: '7px', letterSpacing: '0.16em', color: active ? 'var(--gold)' : 'var(--faint)' }}
+                style={{ fontSize: '9px', letterSpacing: '0.16em', color: active ? 'var(--gold)' : 'var(--faint)' }}
               >
                 {item.label}
               </span>

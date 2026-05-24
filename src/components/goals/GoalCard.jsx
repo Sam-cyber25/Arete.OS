@@ -51,9 +51,9 @@ const GoalCard = memo(function GoalCard({ goal }) {
           onClick={() => setExpanded((p) => !p)}
           className="font-mono flex-shrink-0 text-right transition-colors"
           style={{
-            fontSize:  '12px',
+            fontSize:  '14px',
             color:     expanded ? 'var(--gold)' : 'var(--muted)',
-            width:     36,
+            width:     42,
             marginTop: 4,
           }}
         >
@@ -74,7 +74,7 @@ const GoalCard = memo(function GoalCard({ goal }) {
             <button
               onClick={() => setExpanded((p) => !p)}
               className="font-cormorant text-left w-full"
-              style={{ fontSize: '18px', color: 'var(--text)', fontWeight: 600, lineHeight: 1.3, marginBottom: 4 }}
+              style={{ fontSize: '20px', color: 'var(--text)', fontWeight: 600, lineHeight: 1.3, marginBottom: 4 }}
             >
               {goal.title}
             </button>
@@ -82,19 +82,19 @@ const GoalCard = memo(function GoalCard({ goal }) {
 
           {/* Meta */}
           <div className="flex items-center gap-3">
-            <span className="font-cinzel uppercase" style={{ fontSize: '9px', color: 'var(--muted)', letterSpacing: '0.16em' }}>
+            <span className="font-cinzel uppercase" style={{ fontSize: '11px', color: 'var(--muted)', letterSpacing: '0.14em' }}>
               {goal.category}
             </span>
             <span style={{ color: 'var(--faint)', fontSize: '10px' }}>·</span>
-            <span className="font-cinzel uppercase" style={{ fontSize: '9px', color: 'var(--muted)', letterSpacing: '0.16em' }}>
+            <span className="font-cinzel uppercase" style={{ fontSize: '11px', color: 'var(--muted)', letterSpacing: '0.14em' }}>
               {goal.target}
             </span>
             <span style={{ color: 'var(--faint)', fontSize: '10px' }}>·</span>
             <span
               className="font-cinzel uppercase"
               style={{
-                fontSize:      '9px',
-                letterSpacing: '0.16em',
+                fontSize:      '11px',
+                letterSpacing: '0.14em',
                 color: goal.status === 'Active'    ? 'var(--success)' :
                        goal.status === 'Completed' ? 'var(--gold)' : 'var(--muted)',
               }}
@@ -245,7 +245,7 @@ const GoalCard = memo(function GoalCard({ goal }) {
             <div className="flex items-center justify-between mb-3">
               <p className="section-label">Subtasks</p>
               {subtasks.length > 0 && (
-                <p className="font-mono" style={{ fontSize: '10px', color: 'var(--muted)' }}>
+                <p className="font-mono" style={{ fontSize: '12px', color: 'var(--muted)' }}>
                   {doneCount} / {subtasks.length} complete
                 </p>
               )}
@@ -281,16 +281,42 @@ const GoalCard = memo(function GoalCard({ goal }) {
             </div>
 
             {/* Add subtask */}
-            <form onSubmit={handleAddSubtask} className="flex gap-3">
+            <form onSubmit={handleAddSubtask} className="flex flex-col gap-3">
               <input
                 value={newSubtask}
                 onChange={(e) => setNewSubtask(e.target.value)}
-                placeholder="Add subtask and press Enter..."
+                placeholder="New subtask..."
                 className="input-underline flex-1 font-garamond"
-                style={{ fontSize: '14px' }}
+                style={{
+                  fontSize:    '15px',
+                  height:      40,
+                  paddingLeft: 0,
+                }}
               />
-              <button type="submit" className="btn-ghost" style={{ fontSize: '9px', flexShrink: 0 }}>
-                +
+              <button
+                type="submit"
+                className="font-cinzel uppercase self-start"
+                style={{
+                  fontSize:      '10px',
+                  letterSpacing: '0.2em',
+                  color:         'var(--gold)',
+                  border:        '1px solid rgba(201,168,76,0.5)',
+                  padding:       '7px 16px',
+                  background:    'transparent',
+                  transition:    'border-color 0.15s, background 0.15s',
+                  minHeight:     'unset',
+                  cursor:        'pointer',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--gold)'
+                  e.currentTarget.style.background  = 'rgba(201,168,76,0.08)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(201,168,76,0.5)'
+                  e.currentTarget.style.background  = 'transparent'
+                }}
+              >
+                + Add Subtask
               </button>
             </form>
           </motion.div>

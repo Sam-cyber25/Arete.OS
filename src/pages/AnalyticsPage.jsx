@@ -180,7 +180,7 @@ export default function AnalyticsPage() {
     <motion.div {...PAGE} className="page-container" style={{ maxWidth: 1000, margin: '0 auto' }}>
       {/* Header */}
       <div className="mb-8">
-        <p className="font-cinzel uppercase tracking-widest" style={{ fontSize: '11px', color: 'var(--bronze)', letterSpacing: '0.25em', marginBottom: 4 }}>
+        <p className="font-cinzel uppercase tracking-widest" style={{ fontSize: '13px', color: 'var(--bronze)', letterSpacing: '0.22em', marginBottom: 4 }}>
           Ratio
         </p>
         <p className="font-cormorant" style={{ fontSize: '28px', color: 'var(--text)', fontWeight: 600, lineHeight: 1.2 }}>
@@ -215,10 +215,10 @@ export default function AnalyticsPage() {
                 borderBottom: isMobile && !isLastRow ? '1px solid var(--divider)' : 'none',
               }}
             >
-              <p className="font-mono" style={{ fontSize: isMobile ? '28px' : '32px', color: 'var(--gold)', lineHeight: 1 }}>
+              <p className="font-mono" style={{ fontSize: isMobile ? '28px' : '36px', color: 'var(--gold)', lineHeight: 1 }}>
                 <AnimatedStat value={stat.value} />
               </p>
-              <p className="font-cinzel uppercase" style={{ fontSize: '8px', color: 'var(--muted)', letterSpacing: '0.2em', marginTop: 6, textAlign: 'center' }}>
+              <p className="font-cinzel uppercase" style={{ fontSize: '11px', color: 'var(--muted)', letterSpacing: '0.2em', marginTop: 6, textAlign: 'center' }}>
                 {stat.label}
               </p>
             </div>
@@ -263,7 +263,7 @@ export default function AnalyticsPage() {
 
       {/* ── DISCIPLINE ANALYTICS ── */}
       <div className="mb-8">
-        <p className="font-cinzel uppercase tracking-widest" style={{ fontSize: '11px', color: 'var(--bronze)', letterSpacing: '0.25em', marginBottom: 4, marginTop: 32 }}>
+        <p className="font-cinzel uppercase tracking-widest" style={{ fontSize: '13px', color: 'var(--bronze)', letterSpacing: '0.22em', marginBottom: 4, marginTop: 32 }}>
           Discipline Analytics
         </p>
 

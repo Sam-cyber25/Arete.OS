@@ -350,7 +350,7 @@ export default function StickyNotesPage() {
       {/* Header */}
       <div className="flex items-center justify-between flex-shrink-0 mb-3 px-4 pt-4">
         <div>
-          <p className="font-cinzel uppercase tracking-widest" style={{ fontSize: '11px', color: 'var(--bronze)', letterSpacing: '0.25em', marginBottom: 4 }}>
+          <p className="font-cinzel uppercase tracking-widest" style={{ fontSize: '13px', color: 'var(--bronze)', letterSpacing: '0.22em', marginBottom: 4 }}>
             Epistulae
           </p>
           <p className="font-cormorant" style={{ fontSize: '24px', color: 'var(--text)', fontWeight: 600, lineHeight: 1.2 }}>

@@ -55,7 +55,7 @@ export default function TodaysPriority() {
       )}
 
       {task && (
-        <p className="font-cinzel uppercase mt-3" style={{ fontSize: '8px', color: '#E8A87C', letterSpacing: '0.2em' }}>
+        <p className="font-cinzel uppercase mt-3" style={{ fontSize: '12px', color: '#E8A87C', letterSpacing: '0.2em' }}>
           ✦ High Priority
         </p>
       )}

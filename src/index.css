@@ -242,7 +242,7 @@ input:focus, textarea:focus, select:focus { outline: none; }
 
 .section-label {
   font-family: 'Cinzel', serif;
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--muted);

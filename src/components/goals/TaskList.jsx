@@ -4,10 +4,77 @@ import { useApp }                   from '../../context/AppContext'
 import TaskItem                     from './TaskItem'
 import { isToday, isThisWeek }      from 'date-fns'
 
+/* Styled date input matching app design */
+function DateInput({ value, onChange }) {
+  const [focused, setFocused] = useState(false)
+  return (
+    <input
+      type="date"
+      value={value}
+      onChange={onChange}
+      className="font-mono"
+      style={{
+        background:   'transparent',
+        border:       'none',
+        borderBottom: `1px solid ${focused ? 'var(--gold)' : '#2A2520'}`,
+        color:        value ? 'var(--text)' : 'var(--faint)',
+        fontSize:     '12px',
+        padding:      '8px 0',
+        outline:      'none',
+        colorScheme:  'dark',
+        width:        120,
+        transition:   'border-color 180ms ease',
+      }}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+    />
+  )
+}
+
+/* Styled goal dropdown */
+function GoalSelect({ value, onChange, goals, style }) {
+  const [focused, setFocused] = useState(false)
+  const selected = value && goals.find((g) => g.id === value)
+  return (
+    <div style={{ position: 'relative', ...style }}>
+      <select
+        value={value}
+        onChange={onChange}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        style={{
+          appearance:       'none',
+          WebkitAppearance: 'none',
+          background:       '#13110E',
+          border:           `1px solid ${focused || selected ? 'var(--gold)' : '#2A2520'}`,
+          color:            selected ? 'var(--gold)' : 'var(--muted)',
+          fontFamily:       '"EB Garamond", serif',
+          fontSize:         '14px',
+          padding:          '6px 28px 6px 10px',
+          outline:          'none',
+          cursor:           'pointer',
+          width:            '100%',
+          transition:       'border-color 180ms ease',
+        }}
+      >
+        <option value="">— No Goal —</option>
+        {goals.map((g) => (
+          <option key={g.id} value={g.id}>{g.title}</option>
+        ))}
+      </select>
+      <span style={{
+        position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+        pointerEvents: 'none', fontSize: '10px',
+        color: selected ? 'var(--gold)' : 'var(--faint)',
+      }}>▾</span>
+    </div>
+  )
+}
+
 const FILTERS = ['All', 'Today', 'This Week', 'By Goal']
 
 export default function TaskList() {
-  const { tasks, goals, addTask, showToast } = useApp()
+  const { tasks, goals, addTask, addSubtask, showToast } = useApp()
   const [filter,     setFilter]     = useState('All')
   const [goalFilter, setGoalFilter] = useState('')
   const [showDone,   setShowDone]   = useState(false)
@@ -33,9 +100,28 @@ export default function TaskList() {
   const handleAdd = (e) => {
     e.preventDefault()
     if (!newTitle.trim()) return
-    addTask({ title: newTitle.trim(), priority: newPriority, goalId: newGoalId || null, dueDate: newDueDate || null })
-    showToast('Task added')
-    setNewTitle(''); setNewDueDate('')
+
+    const selectedGoal = newGoalId ? goals.find((g) => g.id === newGoalId) : null
+
+    if (selectedGoal) {
+      const taskId    = `t${Date.now()}`
+      const subtaskId = `st${Date.now() + 1}`
+      addTask({
+        id:              taskId,
+        title:           newTitle.trim(),
+        priority:        newPriority,
+        goalId:          newGoalId,
+        linkedSubtaskId: subtaskId,
+        dueDate:         newDueDate || null,
+      })
+      addSubtask(newGoalId, newTitle.trim(), subtaskId, taskId)
+      showToast(`Added to "${selectedGoal.title}" subtasks`)
+    } else {
+      addTask({ title: newTitle.trim(), priority: newPriority, goalId: null, dueDate: newDueDate || null })
+      showToast('Task added')
+    }
+
+    setNewTitle(''); setNewDueDate(''); setNewGoalId('')
   }
 
   return (
@@ -48,7 +134,7 @@ export default function TaskList() {
             onClick={() => setFilter(f)}
             className="font-cinzel uppercase transition-colors"
             style={{
-              fontSize: '9px',
+              fontSize:      '11px',
               letterSpacing: '0.18em',
               color:         filter === f ? 'var(--gold)' : 'var(--muted)',
               borderBottom:  filter === f ? '1px solid var(--gold)' : '1px solid transparent',
@@ -59,15 +145,12 @@ export default function TaskList() {
           </button>
         ))}
         {filter === 'By Goal' && (
-          <select
+          <GoalSelect
             value={goalFilter}
             onChange={(e) => setGoalFilter(e.target.value)}
-            className="input-box font-garamond"
-            style={{ fontSize: '13px', padding: '4px 10px', width: 'auto' }}
-          >
-            <option value="">All Goals</option>
-            {goals.map((g) => <option key={g.id} value={g.id}>{g.title}</option>)}
-          </select>
+            goals={goals}
+            style={{ minWidth: 180 }}
+          />
         )}
       </div>
 
@@ -122,25 +205,15 @@ export default function TaskList() {
           </div>
           <div>
             <p className="section-label" style={{ marginBottom: 6 }}>Due date</p>
-            <input
-              type="date"
-              value={newDueDate}
-              onChange={(e) => setNewDueDate(e.target.value)}
-              className="input-box font-mono"
-              style={{ fontSize: '12px', padding: '6px 10px', width: 'auto' }}
-            />
+            <DateInput value={newDueDate} onChange={(e) => setNewDueDate(e.target.value)} />
           </div>
-          <div>
+          <div style={{ minWidth: 180 }}>
             <p className="section-label" style={{ marginBottom: 6 }}>Goal (optional)</p>
-            <select
+            <GoalSelect
               value={newGoalId}
               onChange={(e) => setNewGoalId(e.target.value)}
-              className="input-box font-garamond"
-              style={{ fontSize: '13px', padding: '6px 10px', width: 'auto' }}
-            >
-              <option value="">None</option>
-              {goals.map((g) => <option key={g.id} value={g.id}>{g.title}</option>)}
-            </select>
+              goals={goals}
+            />
           </div>
           <button type="submit" className="btn-primary" style={{ padding: '8px 20px' }}>
             Add Task

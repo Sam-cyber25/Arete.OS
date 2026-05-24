@@ -47,7 +47,7 @@ export default function MemoryPage() {
         <div>
           <p
             className="font-cinzel uppercase tracking-widest"
-            style={{ fontSize: '11px', color: 'var(--bronze)', letterSpacing: '0.25em', marginBottom: 4 }}
+            style={{ fontSize: '13px', color: 'var(--bronze)', letterSpacing: '0.22em', marginBottom: 4 }}
           >
             Memoria
           </p>
