@@ -20,7 +20,7 @@ function SectionHeading({ children }) {
 }
 
 export default function SettingsPanel() {
-  const { settings, updateSettings, exportData, clearAllData, showToast } = useApp()
+  const { settings, updateSettings, exportData, clearAllData, signOut, showToast } = useApp()
   const [resetInput, setResetInput] = useState('')
 
   const handleReset = () => {
@@ -49,6 +49,41 @@ export default function SettingsPanel() {
         </div>
       </div>
 
+      {/* — Account — */}
+      <div>
+        <SectionHeading>Account</SectionHeading>
+        <p
+          className="font-garamond"
+          style={{ fontSize: '15px', color: 'var(--muted)', marginBottom: 16, lineHeight: 1.6 }}
+        >
+          Your data syncs across all devices via Supabase.
+        </p>
+        <button
+          className="font-cinzel uppercase"
+          style={{
+            fontSize:      '10px',
+            letterSpacing: '0.2em',
+            color:         '#8B3A3A',
+            border:        '1px solid #8B3A3A',
+            padding:       '9px 22px',
+            background:    'transparent',
+            cursor:        'pointer',
+            transition:    'background 0.15s, color 0.15s',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#8B3A3A'
+            e.currentTarget.style.color      = '#fff'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent'
+            e.currentTarget.style.color      = '#8B3A3A'
+          }}
+          onClick={signOut}
+        >
+          Sign Out
+        </button>
+      </div>
+
       {/* — Data — */}
       <div>
         <SectionHeading>Data</SectionHeading>
@@ -70,7 +105,7 @@ export default function SettingsPanel() {
               className="font-garamond"
               style={{ fontSize: '14px', color: 'var(--danger)', marginBottom: 12, lineHeight: 1.6 }}
             >
-              Danger — permanently erases all data. Type RESET to unlock.
+              Danger — permanently erases all data from all devices. Type RESET to unlock.
             </p>
             <div className="flex gap-3">
               <input
@@ -93,10 +128,10 @@ export default function SettingsPanel() {
         <SectionHeading>About</SectionHeading>
         <p className="font-garamond" style={{ fontSize: '15px', color: 'var(--muted)', lineHeight: 1.8 }}>
           Arête OS — a personal command center for the pursuit of excellence.
-          All data stored locally in your browser. Nothing leaves your device.
+          Data synced securely across devices. Nothing shared with third parties.
         </p>
         <p className="font-mono" style={{ fontSize: '10px', color: 'var(--faint)', marginTop: 8 }}>
-          v2.0 · arete_
+          v3.0 · arete_ · supabase
         </p>
       </div>
     </div>

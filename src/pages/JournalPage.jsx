@@ -1,8 +1,9 @@
-import { useState }               from 'react'
-import { motion, AnimatePresence }  from 'framer-motion'
-import JournalEditor                from '../components/journal/JournalEditor'
-import PastEntries                  from '../components/journal/PastEntries'
-import OrnamentalDivider            from '../components/layout/OrnamentalDivider'
+import { useState, useEffect }            from 'react'
+import { motion, AnimatePresence }         from 'framer-motion'
+import { useApp }                          from '../context/AppContext'
+import JournalEditor                       from '../components/journal/JournalEditor'
+import PastEntries                         from '../components/journal/PastEntries'
+import OrnamentalDivider                   from '../components/layout/OrnamentalDivider'
 
 const PAGE = {
   initial:    { opacity: 0, y: 8 },
@@ -18,6 +19,12 @@ const TABS = [
 
 export default function JournalPage() {
   const [tab, setTab] = useState('today')
+  const { refetchJournal } = useApp()
+
+  /* Pull latest entries from Supabase every time this page mounts */
+  useEffect(() => {
+    refetchJournal()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <motion.div {...PAGE} className="page-container" style={{ maxWidth: 760, margin: '0 auto' }}>

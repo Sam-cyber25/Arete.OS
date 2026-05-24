@@ -1,4 +1,5 @@
-import { useLocalStorage } from './useLocalStorage'
+import { useState, useEffect } from 'react'
+import { supabase }            from '../lib/supabase'
 import { addDays, startOfWeek } from 'date-fns'
 
 /*
@@ -29,7 +30,7 @@ export const CAT_LABELS = {
   personal: '[PERS]',
 }
 
-/* ── Sam's complete weekly routine ────────────────────────────
+/* ── Sam's complete weekly routine ─────────────────────────────
  * dayMask values: 0=Mon 1=Tue 2=Wed 3=Thu 4=Fri 5=Sat 6=Sun
  */
 function buildDefaultEvents() {
@@ -53,16 +54,10 @@ function buildDefaultEvents() {
   }
 
   /* ── SCHOOL DAYS: Mon(0) Tue(1) Wed(2) Thu(3) Fri(4) Sat(5) ─ */
-  const SCHOOL = [0, 1, 2, 3, 4, 5]
-
-  /* ── Non-French evenings: Mon Wed Thu Sat ─── */
+  const SCHOOL     = [0, 1, 2, 3, 4, 5]
   const NON_FRENCH = [0, 2, 3, 5]
-
-  /* ── French + Tutor evenings: Tue Fri ─────── */
-  const FRENCH = [1, 4]
-
-  /* ── Sunday ──────────────────────────────── */
-  const SUN = [6]
+  const FRENCH     = [1, 4]
+  const SUN        = [6]
 
   SCHOOL.forEach((d) => {
     add(d,  5,  0, 'Wake Up',                   'pers',   5)
@@ -85,20 +80,17 @@ function buildDefaultEvents() {
     add(d, 23,  0, 'Sleep',                      'pers', 420)
   })
 
-  /* Gym sessions on their respective days */
   add(0,  5, 15, 'Gym — Chest + Triceps',     'gym',  65)
   add(2,  5, 15, 'Gym — Shoulders + Abs',     'gym',  65)
   add(3,  5, 15, 'Gym — Legs + Cardio',       'gym',  65)
   add(5,  5, 15, 'Gym — Arms + Abs + Cardio', 'gym',  65)
 
-  /* Non-French evening pattern: Mon / Wed / Thu / Sat */
   NON_FRENCH.forEach((d) => {
     add(d, 18, 15, 'Break',                      'pers', 105)
     add(d, 21, 45, 'Next Toppers — Homework',    'study', 45)
     add(d, 22, 30, 'Wind Down',                  'pers',  30)
   })
 
-  /* French + Tutor evening: Tue / Fri */
   FRENCH.forEach((d) => {
     add(d, 18, 15, 'French Class',               'study', 95)
     add(d, 19, 50, 'Break',                      'pers',  10)
@@ -106,33 +98,114 @@ function buildDefaultEvents() {
     add(d, 22, 45, 'Wind Down',                  'pers',  15)
   })
 
-  /* ── SUNDAY ────────────────────────────────────────────── */
   SUN.forEach((d) => {
-    add(d,  7,  0, 'Wake Up — Rest Day',         'pers',  30)
-    add(d,  7, 30, 'Morning Walk',               'gym',   40)
-    add(d,  8, 15, 'Breakfast',                  'diet',  30)
-    add(d,  9,  0, 'Reading',                    'growth', 60)
-    add(d, 10,  0, 'Kairos Deep Work',           'work',  180)
-    add(d, 13,  0, 'Lunch',                      'diet',  30)
-    add(d, 14,  0, 'Study + Revision',           'study', 120)
-    add(d, 15, 45, 'Snack',                      'diet',  15)
-    add(d, 16,  0, 'Free Time — Minecraft / Rest','pers', 150)
-    add(d, 18, 30, 'Full Body Stretch',          'gym',   20)
-    add(d, 20,  0, 'Dinner',                     'diet',  30)
-    add(d, 21,  0, 'Week Prep',                  'pers',  60)
-    add(d, 22,  0, 'Sleep',                      'pers',  480)
+    add(d,  7,  0, 'Wake Up — Rest Day',          'pers',  30)
+    add(d,  7, 30, 'Morning Walk',                'gym',   40)
+    add(d,  8, 15, 'Breakfast',                   'diet',  30)
+    add(d,  9,  0, 'Reading',                     'growth', 60)
+    add(d, 10,  0, 'Kairos Deep Work',            'work',  180)
+    add(d, 13,  0, 'Lunch',                       'diet',  30)
+    add(d, 14,  0, 'Study + Revision',            'study', 120)
+    add(d, 15, 45, 'Snack',                       'diet',  15)
+    add(d, 16,  0, 'Free Time — Minecraft / Rest','pers',  150)
+    add(d, 18, 30, 'Full Body Stretch',           'gym',   20)
+    add(d, 20,  0, 'Dinner',                      'diet',  30)
+    add(d, 21,  0, 'Week Prep',                   'pers',  60)
+    add(d, 22,  0, 'Sleep',                       'pers',  480)
   })
 
   return events
 }
 
+function toUI(row) {
+  return {
+    id:        row.id,
+    title:     row.title,
+    category:  row.category,
+    startTime: row.start_time,
+    duration:  row.duration,
+    recurring: row.recurring ?? 'none',
+  }
+}
+
 export function useSchedule() {
-  /* Using 'schedule_v4' → stored as 'arete_schedule_v4' */
-  const [events, setEvents] = useLocalStorage('schedule_v4', buildDefaultEvents())
+  const [events,  setEvents]  = useState([])
+  const [loading, setLoading] = useState(true)
 
-  const addEvent    = (event)       => setEvents((prev) => [...prev, { ...event, id: `ev_${Date.now()}` }])
-  const updateEvent = (id, updates) => setEvents((prev) => prev.map((e) => (e.id === id ? { ...e, ...updates } : e)))
-  const deleteEvent = (id)          => setEvents((prev) => prev.filter((e) => e.id !== id))
+  useEffect(() => {
+    fetchEvents()
+  }, [])
 
-  return { events, addEvent, updateEvent, deleteEvent }
+  const fetchEvents = async () => {
+    const { data, error } = await supabase
+      .from('schedule_events')
+      .select('*')
+      .order('start_time', { ascending: true })
+    if (!error) {
+      if ((data || []).length === 0) {
+        await seedDefaultEvents()
+      } else {
+        setEvents(data.map(toUI))
+      }
+    }
+    setLoading(false)
+  }
+
+  const seedDefaultEvents = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const defaults = buildDefaultEvents()
+    /* Do NOT send id — let Supabase auto-generate UUIDs */
+    const rows = defaults.map((e) => ({
+      user_id:    user.id,
+      title:      e.title,
+      category:   e.category,
+      start_time: e.startTime,
+      duration:   e.duration,
+      recurring:  e.recurring,
+    }))
+    const { data } = await supabase.from('schedule_events').insert(rows).select()
+    if (data) setEvents(data.map(toUI))
+  }
+
+  const addEvent = async (event) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    /* Do NOT send id — let Supabase auto-generate */
+    const { data, error } = await supabase
+      .from('schedule_events')
+      .insert({
+        user_id:    user.id,
+        title:      event.title,
+        category:   event.category,
+        start_time: event.startTime,
+        duration:   event.duration,
+        recurring:  event.recurring ?? 'none',
+      })
+      .select()
+      .single()
+    if (!error) setEvents((prev) => [...prev, toUI(data)])
+  }
+
+  const updateEvent = async (id, updates) => {
+    const dbUpdates = {}
+    if ('title'     in updates) dbUpdates.title      = updates.title
+    if ('category'  in updates) dbUpdates.category   = updates.category
+    if ('startTime' in updates) dbUpdates.start_time = updates.startTime
+    if ('duration'  in updates) dbUpdates.duration   = updates.duration
+    if ('recurring' in updates) dbUpdates.recurring  = updates.recurring
+    const { data, error } = await supabase
+      .from('schedule_events')
+      .update(dbUpdates)
+      .eq('id', id)
+      .select()
+      .single()
+    if (!error) setEvents((prev) => prev.map((e) => e.id === id ? toUI(data) : e))
+  }
+
+  const deleteEvent = async (id) => {
+    const { error } = await supabase.from('schedule_events').delete().eq('id', id)
+    if (!error) setEvents((prev) => prev.filter((e) => e.id !== id))
+  }
+
+  return { events, loading, addEvent, updateEvent, deleteEvent, refetch: fetchEvents }
 }

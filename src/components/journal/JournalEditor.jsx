@@ -14,7 +14,7 @@ const SECTION_META = [
 
 export default function JournalEditor() {
   const { entries, upsertEntry } = useApp()
-  const today    = new Date().toISOString().slice(0, 10)
+  const today    = new Date().toISOString().slice(0, 10)    // 'YYYY-MM-DD'
   const existing = entries.find((e) => e.date === today)
 
   const [form, setForm] = useState({
@@ -24,15 +24,22 @@ export default function JournalEditor() {
     tomorrow:   existing?.tomorrow   ?? '',
     reflection: existing?.reflection ?? '',
   })
-  const [saved, setSaved] = useState(false)
+  const [saved,   setSaved]   = useState(false)   // true only after Supabase confirms
+  const [saving,  setSaving]  = useState(false)
 
-  const doSave = useCallback(() => {
-    upsertEntry({ date: today, ...form })
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
-  }, [form, today, upsertEntry])
+  /* ── Save: await Supabase, show indicator only on confirmed success ── */
+  const doSave = useCallback(async () => {
+    if (saving) return
+    setSaving(true)
+    const ok = await upsertEntry({ date: today, ...form })
+    setSaving(false)
+    if (ok !== false) {
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    }
+  }, [form, today, upsertEntry, saving])
 
-  // Auto-save after 1.4 s of inactivity
+  /* Auto-save 1.4 s after last keystroke */
   useEffect(() => {
     const t = setTimeout(doSave, 1400)
     return () => clearTimeout(t)
@@ -42,7 +49,7 @@ export default function JournalEditor() {
 
   return (
     <div>
-      {/* Roman date header */}
+      {/* Roman date + save indicator */}
       <div className="flex items-baseline justify-between mb-8">
         <p
           className="font-cinzel uppercase tracking-widest"
@@ -51,16 +58,15 @@ export default function JournalEditor() {
           {formatRomanDate(new Date())}
         </p>
 
-        {/* Saved indicator */}
         <motion.p
-          key={saved ? 'visible' : 'hidden'}
+          key={saved ? 'saved' : saving ? 'saving' : 'idle'}
           initial={{ opacity: 0 }}
-          animate={{ opacity: saved ? 1 : 0 }}
+          animate={{ opacity: saved || saving ? 1 : 0 }}
           transition={{ duration: 0.4 }}
           className="font-mono italic"
           style={{ fontSize: '10px', color: 'var(--faint)' }}
         >
-          — saved —
+          {saving ? '— saving —' : '— saved —'}
         </motion.p>
       </div>
 
@@ -108,8 +114,13 @@ export default function JournalEditor() {
 
       {/* Manual save */}
       <div className="flex justify-end mt-8">
-        <button className="btn-primary" onClick={doSave}>
-          Commit Entry
+        <button
+          className="btn-primary"
+          onClick={doSave}
+          disabled={saving}
+          style={{ opacity: saving ? 0.6 : 1 }}
+        >
+          {saving ? 'Saving…' : 'Commit Entry'}
         </button>
       </div>
     </div>
