@@ -75,13 +75,8 @@ export function useJournal() {
       return false
     }
 
-    /* Normalize returned row and update state */
-    const normalized = normalize(data)
-    setEntries((prev) => {
-      const exists = prev.find((e) => e.date === entryData.date)
-      if (exists) return prev.map((e) => e.date === entryData.date ? normalized : e)
-      return [normalized, ...prev]
-    })
+    /* Refetch ALL entries fresh from Supabase so Past Entries is always in sync */
+    await fetchEntries()
     return true
   }
 
