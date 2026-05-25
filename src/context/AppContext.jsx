@@ -145,7 +145,7 @@ export function AppProvider({ children }) {
     window.location.reload()
   }, [])
 
-  /* Derive streak from journal entries */
+  /* Derive streak from journal entries — used by dashboard widgets */
   const streak = { count: journalApi.journalStreak, lastDate: new Date().toISOString() }
 
   return (
@@ -172,9 +172,8 @@ export function AppProvider({ children }) {
         addEvent:    scheduleApi.addEvent,
         updateEvent: scheduleApi.updateEvent,
         deleteEvent: scheduleApi.deleteEvent,
-        ...journalApi,
-        /* expose journal refetch by name so it isn't overwritten by ...disciplinesApi */
-        refetchJournal: journalApi.refetch,
+        /* journal — only streak exposed; page uses useJournal() directly */
+        journalStreak: journalApi.journalStreak,
         ...disciplinesApi,
       }}
     >

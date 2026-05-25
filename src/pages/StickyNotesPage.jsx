@@ -1,54 +1,27 @@
-import { memo, useState, useRef, useEffect }       from 'react'
-import { motion, AnimatePresence }                  from 'framer-motion'
-import { useStickyNotes }                           from '../hooks/useStickyNotes'
-import { useIsMobile }                              from '../hooks/useIsMobile'
-import { format }                                   from 'date-fns'
-import OrnamentalDivider                            from '../components/layout/OrnamentalDivider'
+import { useState, useRef }         from 'react'
+import { motion, AnimatePresence }   from 'framer-motion'
+import { useStickyNotes }            from '../hooks/useStickyNotes'
+import { useIsMobile }               from '../hooks/useIsMobile'
+import OrnamentalDivider             from '../components/layout/OrnamentalDivider'
 
-const PAGE = {
-  initial:    { opacity: 0, y: 8 },
-  animate:    { opacity: 1, y: 0 },
-  exit:       { opacity: 0 },
-  transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
-}
+const PRIORITIES = ['HIGH', 'MID', 'LOW']
 
 const PRIORITY_META = {
-  high: { label: 'High Priority', bg: '#1C1208', strip: '#8B5E1A', color: '#C9903A' },
-  mid:  { label: 'Mid Priority',  bg: '#0E1208', strip: '#3A5C32', color: '#6A9E5A' },
-  low:  { label: 'Low Priority',  bg: '#0C0C12', strip: '#2A2A5C', color: '#5A5A9E' },
+  HIGH: { label: 'High Priority', bg: '#1C1208', strip: '#8B5E1A', badge: '#E8A87C' },
+  MID:  { label: 'Mid Priority',  bg: '#0E1208', strip: '#3A5C32', badge: '#A8C4A0' },
+  LOW:  { label: 'Low Priority',  bg: '#0C0C12', strip: '#2A2A5C', badge: '#8AACCF' },
 }
-const PRIORITIES = ['high', 'mid', 'low']
+
 const SORT_OPTIONS = ['newest', 'oldest', 'pinned']
 
-// ── Debounced textarea ───────────────────────────────────────
-function AutoTextarea({ value, onChange, placeholder, style, className }) {
-  const [local, setLocal] = useState(value)
-  const timer = useRef(null)
-  useEffect(() => { setLocal(value) }, [value])
-  const handle = (e) => {
-    setLocal(e.target.value)
-    clearTimeout(timer.current)
-    timer.current = setTimeout(() => onChange(e.target.value), 300)
-  }
-  return (
-    <textarea
-      value={local}
-      onChange={handle}
-      placeholder={placeholder}
-      className={className}
-      style={{ ...style, resize: 'none', outline: 'none', background: 'transparent', border: 'none', width: '100%' }}
-    />
-  )
-}
-
+/* ── Debounced inline input ── */
 function AutoInput({ value, onChange, placeholder, style, className }) {
   const [local, setLocal] = useState(value)
   const timer = useRef(null)
-  useEffect(() => { setLocal(value) }, [value])
   const handle = (e) => {
     setLocal(e.target.value)
     clearTimeout(timer.current)
-    timer.current = setTimeout(() => onChange(e.target.value), 300)
+    timer.current = setTimeout(() => onChange(e.target.value), 400)
   }
   return (
     <input
@@ -61,93 +34,99 @@ function AutoInput({ value, onChange, placeholder, style, className }) {
   )
 }
 
-// ── Individual sticky note ────────────────────────────────────
-const StickyNote = memo(function StickyNote({
-  note,
-  onUpdate,
-  onDelete,
-  onChangePriority,
-  onTogglePin,
-  onDragStart,
-  onDragOver,
-  onDrop,
-  onMoveUp,
-  onMoveDown,
-  isMobile,
-}) {
-  const meta    = PRIORITY_META[note.priority] || PRIORITY_META.low
+/* ── Debounced inline textarea ── */
+function AutoTextarea({ value, onChange, placeholder, style, className }) {
+  const [local, setLocal] = useState(value)
+  const timer = useRef(null)
+  const handle = (e) => {
+    setLocal(e.target.value)
+    clearTimeout(timer.current)
+    timer.current = setTimeout(() => onChange(e.target.value), 400)
+  }
+  return (
+    <textarea
+      value={local}
+      onChange={handle}
+      placeholder={placeholder}
+      className={className}
+      style={{ ...style, outline: 'none', background: 'transparent', border: 'none', width: '100%', resize: 'none' }}
+    />
+  )
+}
+
+/* ── Individual note card ── */
+function NoteCard({ note, onUpdate, onDelete, onTogglePin, onChangePriority, isMobile }) {
   const [hovered, setHovered] = useState(false)
+  const meta = PRIORITY_META[note.priority] || PRIORITY_META.LOW
 
   return (
     <motion.div
       layout
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      draggable={!isMobile}
-      onDragStart={!isMobile ? (e) => { e.dataTransfer.setData('noteId', note.id); onDragStart(note.id) } : undefined}
-      onDragOver={!isMobile  ? (e)  => { e.preventDefault(); onDragOver(note.id) } : undefined}
-      onDrop={!isMobile      ? (e)  => { e.preventDefault(); onDrop(note.id) } : undefined}
+      exit={{ opacity: 0, scale: 0.97 }}
+      transition={{ duration: 0.2 }}
       onMouseEnter={() => !isMobile && setHovered(true)}
       onMouseLeave={() => !isMobile && setHovered(false)}
       style={{
-        background:  meta.bg,
-        border:      `1px solid ${hovered ? meta.strip + '66' : 'var(--border)'}`,
-        minHeight:   160,
-        transition:  'border-color 200ms ease',
-        cursor:      isMobile ? 'default' : 'grab',
-        position:    'relative',
+        background:   meta.bg,
+        border:       `1px solid ${hovered ? meta.strip + '66' : 'var(--border)'}`,
+        borderRadius: 2,
+        overflow:     'hidden',
         marginBottom: 12,
+        transition:   'border-color 200ms ease',
+        position:     'relative',
       }}
     >
-      {/* Priority color strip */}
-      <div style={{ height: 4, background: meta.strip, width: '100%' }} />
+      {/* Priority strip */}
+      <div style={{ height: 3, background: meta.strip }} />
 
       <div style={{ padding: '12px 14px 14px' }}>
-        {/* Priority badge */}
-        <p
-          className="font-cinzel uppercase"
-          style={{ fontSize: '8px', letterSpacing: '0.16em', color: meta.color, marginBottom: 8 }}
-        >
-          {note.pinned && <span style={{ marginRight: 4 }}>◆</span>}
-          {meta.label}
-        </p>
+        {/* Badge row */}
+        <div className="flex items-center justify-between mb-2">
+          <span className="font-cinzel" style={{ fontSize: '8px', letterSpacing: '0.15em', color: meta.badge }}>
+            {note.pinned && <span style={{ marginRight: 4 }}>◆</span>}
+            {meta.label.toUpperCase()}
+          </span>
+        </div>
 
         {/* Title */}
         <AutoInput
-          value={note.title}
+          value={note.title || ''}
           onChange={(v) => onUpdate(note.id, { title: v })}
           placeholder="Title..."
           className="font-cormorant"
           style={{ fontSize: '17px', fontWeight: 600, color: 'var(--text)', marginBottom: 8, display: 'block' }}
         />
 
-        {/* Body */}
+        {/* Content — DB column name is `content` */}
         <AutoTextarea
-          value={note.body}
-          onChange={(v) => onUpdate(note.id, { body: v })}
+          value={note.content || ''}
+          onChange={(v) => onUpdate(note.id, { content: v })}
           placeholder="Write here..."
           className="font-garamond"
           style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: 1.7, minHeight: 60 }}
+          rows={3}
         />
 
         {/* Bottom row */}
         <div className="flex items-center justify-between mt-3">
           <p className="font-mono" style={{ fontSize: '9px', color: 'var(--faint)' }}>
-            {format(note.createdAt, 'MMM d')}
+            {new Date(note.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
           </p>
 
-          {/* Mobile action row */}
+          {/* Mobile controls */}
           {isMobile && (
             <div className="flex gap-3">
               <button
                 className="font-cinzel"
                 style={{ fontSize: '11px', color: note.pinned ? 'var(--gold)' : 'var(--muted)', padding: '4px 6px', minHeight: 'unset' }}
                 onClick={() => onTogglePin(note.id)}
+                title="Pin"
               >
                 ◆
               </button>
-              {note.priority !== 'high' && (
+              {note.priority !== 'HIGH' && (
                 <button
                   className="font-cinzel"
                   style={{ fontSize: '11px', color: 'var(--muted)', padding: '4px 6px', minHeight: 'unset' }}
@@ -157,7 +136,7 @@ const StickyNote = memo(function StickyNote({
                   ↑
                 </button>
               )}
-              {note.priority !== 'low' && (
+              {note.priority !== 'LOW' && (
                 <button
                   className="font-cinzel"
                   style={{ fontSize: '11px', color: 'var(--muted)', padding: '4px 6px', minHeight: 'unset' }}
@@ -169,7 +148,7 @@ const StickyNote = memo(function StickyNote({
               )}
               <button
                 className="font-cinzel"
-                style={{ fontSize: '12px', color: 'var(--muted)', padding: '4px 6px', minHeight: 'unset' }}
+                style={{ fontSize: '14px', color: 'var(--muted)', padding: '4px 6px', minHeight: 'unset' }}
                 onClick={() => onDelete(note.id)}
               >
                 ×
@@ -188,7 +167,7 @@ const StickyNote = memo(function StickyNote({
             exit={{ opacity: 0 }}
             className="absolute top-2 right-2 flex gap-1"
           >
-            {note.priority !== 'high' && (
+            {note.priority !== 'HIGH' && (
               <button
                 className="font-cinzel"
                 style={{ fontSize: '10px', color: 'var(--muted)', padding: '2px 5px', background: 'var(--surface)', border: '1px solid var(--border)', minHeight: 'unset' }}
@@ -198,7 +177,7 @@ const StickyNote = memo(function StickyNote({
                 ↑
               </button>
             )}
-            {note.priority !== 'low' && (
+            {note.priority !== 'LOW' && (
               <button
                 className="font-cinzel"
                 style={{ fontSize: '10px', color: 'var(--muted)', padding: '2px 5px', background: 'var(--surface)', border: '1px solid var(--border)', minHeight: 'unset' }}
@@ -228,18 +207,59 @@ const StickyNote = memo(function StickyNote({
       </AnimatePresence>
     </motion.div>
   )
-})
+}
 
-// ── Desktop Column ────────────────────────────────────────────
-function Column({ priority, notes, sort, onAdd, onUpdate, onDelete, onChangePriority, onTogglePin, onDragStart, onDragOver, onDrop, onDropColumn, isMobile }) {
+/* ── Add note inline form ── */
+function AddNoteForm({ priority, onAdd, onClose }) {
+  const [title,   setTitle]   = useState('')
+  const [content, setContent] = useState('')
+
+  const handleSubmit = async () => {
+    if (!content.trim() && !title.trim()) return
+    await onAdd({ title, content, priority })
+    onClose()
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0 }}
+      style={{ background: '#13110E', border: '1px solid var(--gold)', borderRadius: 2, padding: 16, marginBottom: 12 }}
+    >
+      <input
+        placeholder="Title (optional)"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className="font-cormorant"
+        style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text)', background: 'transparent', border: 'none', outline: 'none', borderBottom: '1px solid var(--divider)', width: '100%', marginBottom: 10, paddingBottom: 6 }}
+      />
+      <textarea
+        placeholder="What's on your mind..."
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        autoFocus
+        className="font-garamond"
+        style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: 1.7, background: 'transparent', border: 'none', outline: 'none', width: '100%', resize: 'none' }}
+        rows={3}
+      />
+      <div className="flex gap-3 justify-end mt-3">
+        <button className="btn-ghost" style={{ fontSize: '9px' }} onClick={onClose}>Cancel</button>
+        <button className="btn-primary" style={{ fontSize: '9px' }} onClick={handleSubmit}>Add Note</button>
+      </div>
+    </motion.div>
+  )
+}
+
+/* ── Desktop column ── */
+function Column({ priority, notes, sort, onAdd, onUpdate, onDelete, onTogglePin, onChangePriority, onDragStart, onDragOver, onDrop, onDropColumn }) {
   const meta = PRIORITY_META[priority]
+  const [addingHere, setAddingHere] = useState(false)
 
   const sorted = [...notes].sort((a, b) => {
-    if (sort === 'pinned') {
-      if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
-    }
-    if (sort === 'oldest') return a.createdAt - b.createdAt
-    return b.createdAt - a.createdAt
+    if (sort === 'pinned' && a.pinned !== b.pinned) return a.pinned ? -1 : 1
+    if (sort === 'oldest') return new Date(a.created_at) - new Date(b.created_at)
+    return new Date(b.created_at) - new Date(a.created_at)
   })
 
   return (
@@ -256,17 +276,15 @@ function Column({ priority, notes, sort, onAdd, onUpdate, onDelete, onChangePrio
       >
         <div className="flex items-center gap-3">
           <div style={{ width: 6, height: 6, background: meta.strip, flexShrink: 0 }} />
-          <p className="font-cinzel uppercase tracking-widest" style={{ fontSize: '9px', color: meta.color, letterSpacing: '0.22em' }}>
+          <p className="font-cinzel uppercase" style={{ fontSize: '9px', color: meta.badge, letterSpacing: '0.22em' }}>
             {priority}
           </p>
-          <span className="font-mono" style={{ fontSize: '10px', color: 'var(--faint)' }}>
-            {notes.length}
-          </span>
+          <span className="font-mono" style={{ fontSize: '10px', color: 'var(--faint)' }}>{notes.length}</span>
         </div>
         <button
           className="font-cinzel"
-          style={{ fontSize: '14px', color: 'var(--muted)', minHeight: 'unset' }}
-          onClick={() => onAdd(priority)}
+          style={{ fontSize: '16px', color: 'var(--muted)', minHeight: 'unset' }}
+          onClick={() => setAddingHere((p) => !p)}
         >
           +
         </button>
@@ -274,8 +292,18 @@ function Column({ priority, notes, sort, onAdd, onUpdate, onDelete, onChangePrio
 
       {/* Notes list */}
       <div className="flex-1 overflow-y-auto px-4 pt-4">
+        <AnimatePresence>
+          {addingHere && (
+            <AddNoteForm
+              priority={priority}
+              onAdd={onAdd}
+              onClose={() => setAddingHere(false)}
+            />
+          )}
+        </AnimatePresence>
+
         <AnimatePresence mode="popLayout">
-          {sorted.length === 0 && (
+          {sorted.length === 0 && !addingHere && (
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -286,17 +314,14 @@ function Column({ priority, notes, sort, onAdd, onUpdate, onDelete, onChangePrio
             </motion.p>
           )}
           {sorted.map((note) => (
-            <StickyNote
+            <NoteCard
               key={note.id}
               note={note}
               onUpdate={onUpdate}
               onDelete={onDelete}
-              onChangePriority={onChangePriority}
               onTogglePin={onTogglePin}
-              onDragStart={onDragStart}
-              onDragOver={onDragOver}
-              onDrop={onDrop}
-              isMobile={isMobile}
+              onChangePriority={onChangePriority}
+              isMobile={false}
             />
           ))}
         </AnimatePresence>
@@ -305,29 +330,26 @@ function Column({ priority, notes, sort, onAdd, onUpdate, onDelete, onChangePrio
   )
 }
 
-// ── Main Page ─────────────────────────────────────────────────
+/* ── Main page ── */
 export default function StickyNotesPage() {
-  const { notes, addNote, updateNote, deleteNote, changePriority, togglePin, reorder } = useStickyNotes()
+  const { notes, loading, addNote, updateNote, deleteNote, togglePin, byPriority } = useStickyNotes()
   const isMobile = useIsMobile()
 
-  const [search,        setSearch]        = useState('')
-  const [sorts,         setSorts]         = useState({ high: 'newest', mid: 'newest', low: 'newest' })
-  const [activeMobileTab, setActiveMobileTab] = useState('high')   // mobile only
+  const [search,          setSearch]          = useState('')
+  const [sorts,           setSorts]           = useState({ HIGH: 'newest', MID: 'newest', LOW: 'newest' })
+  const [activeMobileTab, setActiveMobileTab] = useState('HIGH')
   const draggedId = useRef(null)
 
+  const changePriority = (id, priority) => updateNote(id, { priority })
+
   const handleDragStart = (id) => { draggedId.current = id }
-  const handleDragOver  = () => {}
 
   const handleDrop = (targetId) => {
     if (!draggedId.current || draggedId.current === targetId) return
     const dragged = notes.find((n) => n.id === draggedId.current)
     const target  = notes.find((n) => n.id === targetId)
     if (!dragged || !target) return
-    if (dragged.priority !== target.priority) {
-      changePriority(draggedId.current, target.priority)
-    } else {
-      reorder(draggedId.current, targetId)
-    }
+    if (dragged.priority !== target.priority) changePriority(draggedId.current, target.priority)
     draggedId.current = null
   }
 
@@ -340,17 +362,30 @@ export default function StickyNotesPage() {
 
   const filtered = search.trim()
     ? notes.filter((n) =>
-        n.title.toLowerCase().includes(search.toLowerCase()) ||
-        n.body.toLowerCase().includes(search.toLowerCase())
+        (n.title  || '').toLowerCase().includes(search.toLowerCase()) ||
+        (n.content || '').toLowerCase().includes(search.toLowerCase())
       )
     : notes
 
+  if (loading) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '40vh', fontFamily: 'Cinzel', fontSize: '11px', letterSpacing: '0.3em', color: 'var(--faint)' }}>
+      — loading —
+    </div>
+  )
+
   return (
-    <motion.div {...PAGE} className="flex flex-col" style={{ height: '100%' }}>
-      {/* Header */}
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      className="flex flex-col"
+      style={{ height: '100%' }}
+    >
+      {/* ── Header ── */}
       <div className="flex items-center justify-between flex-shrink-0 mb-3 px-4 pt-4">
         <div>
-          <p className="font-cinzel uppercase tracking-widest" style={{ fontSize: '13px', color: 'var(--bronze)', letterSpacing: '0.22em', marginBottom: 4 }}>
+          <p className="font-cinzel uppercase" style={{ fontSize: '10px', color: 'var(--bronze)', letterSpacing: '0.22em', marginBottom: 4 }}>
             Epistulae
           </p>
           <p className="font-cormorant" style={{ fontSize: '24px', color: 'var(--text)', fontWeight: 600, lineHeight: 1.2 }}>
@@ -381,40 +416,38 @@ export default function StickyNotesPage() {
 
       <OrnamentalDivider opacity={0.15} />
 
-      {/* ── MOBILE: Priority tabs ── */}
+      {/* ── MOBILE: priority tabs ── */}
       {isMobile && (
         <div className="priority-tabs flex-shrink-0">
           {PRIORITIES.map((p) => {
-            const meta = PRIORITY_META[p]
+            const meta  = PRIORITY_META[p]
             const count = filtered.filter((n) => n.priority === p).length
             return (
               <button
                 key={p}
                 onClick={() => setActiveMobileTab(p)}
-                className={`priority-tab active-${p}`}
+                className={`priority-tab active-${p.toLowerCase()}`}
                 style={{
-                  color:             activeMobileTab === p ? meta.color : 'var(--faint)',
+                  color:             activeMobileTab === p ? meta.badge : 'var(--faint)',
                   borderBottomColor: activeMobileTab === p ? meta.strip : 'transparent',
                 }}
               >
-                {p.toUpperCase()}
-                <span className="font-mono" style={{ marginLeft: 4, fontSize: '8px', color: 'var(--faint)' }}>
-                  {count}
-                </span>
+                {p}
+                <span className="font-mono" style={{ marginLeft: 4, fontSize: '8px', color: 'var(--faint)' }}>{count}</span>
               </button>
             )
           })}
         </div>
       )}
 
+      {/* ══ MOBILE VIEW ══ */}
       {isMobile ? (
-        /* ── MOBILE: single column ── */
         <div className="flex-1 overflow-y-auto px-4 pt-4">
           {/* Add button */}
           <button
             className="font-cinzel uppercase"
-            style={{ fontSize: '9px', color: PRIORITY_META[activeMobileTab].color, letterSpacing: '0.2em', marginBottom: 16, display: 'block' }}
-            onClick={() => addNote(activeMobileTab)}
+            style={{ fontSize: '9px', color: PRIORITY_META[activeMobileTab].badge, letterSpacing: '0.2em', marginBottom: 16, display: 'block' }}
+            onClick={() => addNote({ title: '', content: '', priority: activeMobileTab })}
           >
             + New Note
           </button>
@@ -427,7 +460,7 @@ export default function StickyNotesPage() {
                 className="font-garamond italic"
                 style={{ fontSize: '14px', color: 'var(--faint)', textAlign: 'center', marginTop: 24 }}
               >
-                No {activeMobileTab} priority notes
+                No {activeMobileTab.toLowerCase()} priority notes
               </motion.p>
             )}
             {filtered
@@ -435,20 +468,17 @@ export default function StickyNotesPage() {
               .sort((a, b) => {
                 const s = sorts[activeMobileTab]
                 if (s === 'pinned' && a.pinned !== b.pinned) return a.pinned ? -1 : 1
-                if (s === 'oldest') return a.createdAt - b.createdAt
-                return b.createdAt - a.createdAt
+                if (s === 'oldest') return new Date(a.created_at) - new Date(b.created_at)
+                return new Date(b.created_at) - new Date(a.created_at)
               })
               .map((note) => (
-                <StickyNote
+                <NoteCard
                   key={note.id}
                   note={note}
                   onUpdate={updateNote}
                   onDelete={deleteNote}
-                  onChangePriority={changePriority}
                   onTogglePin={togglePin}
-                  onDragStart={() => {}}
-                  onDragOver={() => {}}
-                  onDrop={() => {}}
+                  onChangePriority={changePriority}
                   isMobile={true}
                 />
               ))
@@ -462,20 +492,16 @@ export default function StickyNotesPage() {
                 key={s}
                 onClick={() => setSorts((prev) => ({ ...prev, [activeMobileTab]: s }))}
                 className="font-cinzel uppercase"
-                style={{
-                  fontSize:      '8px',
-                  letterSpacing: '0.12em',
-                  color:         sorts[activeMobileTab] === s ? 'var(--gold)' : 'var(--faint)',
-                  minHeight:     44,
-                }}
+                style={{ fontSize: '8px', letterSpacing: '0.12em', color: sorts[activeMobileTab] === s ? 'var(--gold)' : 'var(--faint)', minHeight: 44 }}
               >
                 {s}
               </button>
             ))}
           </div>
         </div>
+
       ) : (
-        /* ── DESKTOP: three columns ── */
+        /* ══ DESKTOP VIEW: three columns ══ */
         <>
           <div
             className="flex flex-1 min-h-0"
@@ -490,19 +516,18 @@ export default function StickyNotesPage() {
                 onAdd={addNote}
                 onUpdate={updateNote}
                 onDelete={deleteNote}
-                onChangePriority={changePriority}
                 onTogglePin={togglePin}
+                onChangePriority={changePriority}
                 onDragStart={handleDragStart}
-                onDragOver={handleDragOver}
+                onDragOver={() => {}}
                 onDrop={handleDrop}
                 onDropColumn={handleDropColumn}
-                isMobile={false}
               />
             ))}
           </div>
 
           {/* Sort row */}
-          <div className="flex flex-shrink-0 mt-3 gap-0" style={{ borderTop: '1px solid var(--divider)' }}>
+          <div className="flex flex-shrink-0 mt-3" style={{ borderTop: '1px solid var(--divider)' }}>
             {PRIORITIES.map((priority) => (
               <div key={priority} className="flex-1 flex items-center gap-2 pt-3 px-1">
                 {SORT_OPTIONS.map((s) => (
@@ -510,12 +535,7 @@ export default function StickyNotesPage() {
                     key={s}
                     onClick={() => setSorts((prev) => ({ ...prev, [priority]: s }))}
                     className="font-cinzel uppercase transition-colors"
-                    style={{
-                      fontSize:      '8px',
-                      letterSpacing: '0.12em',
-                      color:         sorts[priority] === s ? 'var(--gold)' : 'var(--faint)',
-                      minHeight:     'unset',
-                    }}
+                    style={{ fontSize: '8px', letterSpacing: '0.12em', color: sorts[priority] === s ? 'var(--gold)' : 'var(--faint)', minHeight: 'unset' }}
                   >
                     {s}
                   </button>

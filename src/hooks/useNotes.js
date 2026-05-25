@@ -47,7 +47,7 @@ export function useNotes() {
       .select('*')
       .order('created_at', { ascending: false })
     if (!error) {
-      if (data.length === 0) {
+      if ((data || []).length === 0) {
         await seedDefaultNotes()
       } else {
         setNotes(data.map(toUI))

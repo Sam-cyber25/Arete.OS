@@ -1,102 +1,73 @@
 import { useState, useEffect } from 'react'
 import { supabase }            from '../lib/supabase'
-import { format, startOfDay }  from 'date-fns'
-
-function todayKey() {
-  return format(new Date(), 'yyyy-MM-dd')
-}
-
-/* Add a `date` alias to any raw Supabase row so components use e.date */
-function normalize(row) {
-  return { ...row, date: row.entry_date }
-}
-
-function emptyEntry(date) {
-  return {
-    id:         date,
-    date,
-    entry_date: date,
-    intensity:  null,
-    victories:  '',
-    lessons:    '',
-    tomorrow:   '',
-    reflection: '',
-    createdAt:  new Date().toISOString(),
-  }
-}
+import { startOfDay }          from 'date-fns'
 
 export function useJournal() {
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => { fetchEntries() }, [])
+  useEffect(() => {
+    fetchEntries()
+  }, [])
 
-  /* ── Fetch ── */
   const fetchEntries = async () => {
     setLoading(true)
     const { data, error } = await supabase
       .from('journal_entries')
       .select('*')
       .order('entry_date', { ascending: false })
-    if (!error) {
-      /* Normalize: add `date` alias so components work with e.date */
-      setEntries((data || []).map(normalize))
-    }
+
+    if (!error) setEntries(data || [])
     setLoading(false)
   }
 
-  const today = todayKey()
-  const todayEntry = entries.find((e) => e.date === today) || emptyEntry(today)
-
-  /* ── Upsert ── */
-  const upsertEntry = async (entryData) => {
+  const saveEntry = async ({ date, victories, lessons, tomorrow, reflection, intensity }) => {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    if (!user) return false
 
-    /* Only send valid DB columns — no .select() needed since we refetch below */
     const { error } = await supabase
       .from('journal_entries')
       .upsert(
         {
           user_id:    user.id,
-          entry_date: entryData.date,      // map date → entry_date
-          victories:  entryData.victories  || '',
-          lessons:    entryData.lessons    || '',
-          tomorrow:   entryData.tomorrow   || '',
-          reflection: entryData.reflection || '',
-          intensity:  entryData.intensity  || 3,
+          entry_date: date,
+          victories:  victories  || '',
+          lessons:    lessons    || '',
+          tomorrow:   tomorrow   || '',
+          reflection: reflection || '',
+          intensity:  intensity  || 3,
         },
         { onConflict: 'user_id,entry_date' }
       )
 
     if (error) {
-      console.error('Journal upsert error:', error)
-      return
+      console.error('Journal save error:', error)
+      return false
     }
 
-    /* Refetch everything fresh — guarantees Past Entries reflects DB state */
     await fetchEntries()
+    return true
   }
 
-  /* ── Delete ── */
-  const deleteEntry = async (date) => {
+  const deleteEntry = async (entryDate) => {
     const { error } = await supabase
       .from('journal_entries')
       .delete()
-      .eq('entry_date', date)           // use DB column name
-    if (!error) setEntries((prev) => prev.filter((e) => e.date !== date))
+      .eq('entry_date', entryDate)
+
+    if (!error) setEntries((prev) => prev.filter((e) => e.entry_date !== entryDate))
   }
 
-  /* Past entries sorted newest-first, excluding today */
-  const pastEntries = [...entries]
-    .filter((e) => e.date !== today)
-    .sort((a, b) => (a.date < b.date ? 1 : -1))
+  const getTodayEntry = () => {
+    const today = new Date().toISOString().slice(0, 10)
+    return entries.find((e) => e.entry_date === today) || null
+  }
 
-  /* Streak — consecutive days with an entry */
+  /* ── Streak — consecutive days with an entry ── */
   const journalStreak = (() => {
     if (!entries.length) return 0
     const dates = entries
-      .map((e) => startOfDay(new Date(e.date + 'T12:00:00')).getTime())
+      .map((e) => startOfDay(new Date(e.entry_date + 'T12:00:00')).getTime())
       .sort((a, b) => b - a)
     const msPerDay = 86400000
     let streak = 1
@@ -107,14 +78,5 @@ export function useJournal() {
     return streak
   })()
 
-  return {
-    entries,
-    loading,
-    todayEntry,
-    upsertEntry,
-    deleteEntry,
-    pastEntries,
-    journalStreak,
-    refetch: fetchEntries,
-  }
+  return { entries, loading, saveEntry, deleteEntry, getTodayEntry, journalStreak, refetch: fetchEntries }
 }
