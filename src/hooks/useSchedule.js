@@ -155,7 +155,6 @@ export function useSchedule() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
     const defaults = buildDefaultEvents()
-    /* Do NOT send id — let Supabase auto-generate UUIDs */
     const rows = defaults.map((e) => ({
       user_id:    user.id,
       title:      e.title,
@@ -164,7 +163,11 @@ export function useSchedule() {
       duration:   e.duration,
       recurring:  e.recurring,
     }))
-    const { data } = await supabase.from('schedule_events').insert(rows).select()
+    /* Use upsert + ignoreDuplicates so concurrent sessions don't double-seed */
+    const { data } = await supabase
+      .from('schedule_events')
+      .upsert(rows, { onConflict: 'user_id,title,start_time', ignoreDuplicates: true })
+      .select()
     if (data) setEvents(data.map(toUI))
   }
 

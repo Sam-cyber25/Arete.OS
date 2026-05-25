@@ -27,16 +27,14 @@ export default function JournalEditor() {
   const [saved,   setSaved]   = useState(false)   // true only after Supabase confirms
   const [saving,  setSaving]  = useState(false)
 
-  /* ── Save: await Supabase, show indicator only on confirmed success ── */
+  /* ── Save: await Supabase, show "saved" after upsert completes ── */
   const doSave = useCallback(async () => {
     if (saving) return
     setSaving(true)
-    const ok = await upsertEntry({ date: today, ...form })
+    await upsertEntry({ date: today, ...form })
     setSaving(false)
-    if (ok !== false) {
-      setSaved(true)
-      setTimeout(() => setSaved(false), 2000)
-    }
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
   }, [form, today, upsertEntry, saving])
 
   /* Auto-save 1.4 s after last keystroke */

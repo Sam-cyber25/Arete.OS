@@ -110,8 +110,16 @@ export function useStickyNotes() {
   }
 
   const deleteNote = async (id) => {
-    const { error } = await supabase.from('sticky_notes').delete().eq('id', id)
-    if (!error) setNotes((prev) => prev.filter((n) => n.id !== id))
+    console.log('deleting sticky id:', id)   // should be a UUID like xxxxxxxx-xxxx-...
+    const { error } = await supabase
+      .from('sticky_notes')
+      .delete()
+      .eq('id', id)
+    if (error) {
+      console.error('Delete sticky error:', error)
+      return
+    }
+    setNotes((prev) => prev.filter((n) => n.id !== id))
   }
 
   const changePriority = (id, priority) => updateNote(id, { priority })

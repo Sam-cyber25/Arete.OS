@@ -51,14 +51,15 @@ export function useJournal() {
   /* ── Upsert ── */
   const upsertEntry = async (entryData) => {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return false
+    if (!user) return
 
-    const { data, error } = await supabase
+    /* Only send valid DB columns — no .select() needed since we refetch below */
+    const { error } = await supabase
       .from('journal_entries')
       .upsert(
         {
           user_id:    user.id,
-          entry_date: entryData.date,     // map date → entry_date
+          entry_date: entryData.date,      // map date → entry_date
           victories:  entryData.victories  || '',
           lessons:    entryData.lessons    || '',
           tomorrow:   entryData.tomorrow   || '',
@@ -67,17 +68,14 @@ export function useJournal() {
         },
         { onConflict: 'user_id,entry_date' }
       )
-      .select()
-      .single()
 
     if (error) {
       console.error('Journal upsert error:', error)
-      return false
+      return
     }
 
-    /* Refetch ALL entries fresh from Supabase so Past Entries is always in sync */
+    /* Refetch everything fresh — guarantees Past Entries reflects DB state */
     await fetchEntries()
-    return true
   }
 
   /* ── Delete ── */
