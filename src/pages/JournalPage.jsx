@@ -53,7 +53,7 @@ export default function JournalPage() {
   useEffect(() => {
     if (!hasUserTyped.current) return
     clearTimeout(autoSaveTimer.current)
-    autoSaveTimer.current = setTimeout(() => { handleSave(false) }, 1500)
+    autoSaveTimer.current = setTimeout(() => { handleSave(false) }, 4000)
     return () => clearTimeout(autoSaveTimer.current)
   }, [form]) // eslint-disable-line react-hooks/exhaustive-deps
 

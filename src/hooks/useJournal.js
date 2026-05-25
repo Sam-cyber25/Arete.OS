@@ -25,7 +25,7 @@ export function useJournal() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return false
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('journal_entries')
       .upsert(
         {
@@ -39,13 +39,21 @@ export function useJournal() {
         },
         { onConflict: 'user_id,entry_date' }
       )
+      .select()
+      .single()
 
     if (error) {
       console.error('Journal save error:', error)
       return false
     }
 
-    await fetchEntries()
+    /* Update local state directly — no full refetch, no re-render cascade */
+    setEntries((prev) => {
+      const exists = prev.find((e) => e.entry_date === date)
+      if (exists) return prev.map((e) => e.entry_date === date ? data : e)
+      return [data, ...prev]
+    })
+
     return true
   }
 
