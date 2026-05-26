@@ -41,6 +41,10 @@ export default function JournalPage() {
 
   const hasTyped   = useRef(false)
   const saveTimer  = useRef(null)
+  const formRef    = useRef(form)   // always holds the latest form — prevents stale closure in doSave
+
+  /* Keep formRef in sync with every form update */
+  useEffect(() => { formRef.current = form }, [form])
 
   /* ── Load today's entry once Supabase data arrives, but only if the user
         hasn't started typing yet (avoid clobbering unsaved work) ── */
@@ -58,11 +62,13 @@ export default function JournalPage() {
     }
   }, [entries, loading])
 
-  /* ── Save to Supabase ── */
+  /* ── Save to Supabase ──
+     Reads formRef.current (not closed-over `form`) so the timer always
+     saves the very latest content, even if React hasn't re-rendered yet. ── */
   const doSave = useCallback(async () => {
     setStatus('saving')
     try {
-      const success = await saveEntry({ date: today, ...form })
+      const success = await saveEntry({ date: today, ...formRef.current })
       if (success) {
         setStatus('saved')
         setTimeout(() => setStatus('idle'), 2000)
@@ -74,7 +80,7 @@ export default function JournalPage() {
       setStatus('error')
       setTimeout(() => setStatus('idle'), 3000)
     }
-  }, [form, saveEntry])
+  }, [saveEntry])   // formRef is a ref — stable, no dep needed
 
   /* ── Update form field + schedule auto-save ── */
   const handleChange = (key, value) => {

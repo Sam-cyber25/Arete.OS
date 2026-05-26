@@ -17,6 +17,7 @@ export function useJournal() {
       .select('*')
       .order('entry_date', { ascending: false })
 
+    console.log('Journal entries from Supabase:', data, error)
     if (!error) setEntries(data || [])
     setLoading(false)
   }
