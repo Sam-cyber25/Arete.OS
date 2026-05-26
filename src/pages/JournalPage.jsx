@@ -1,318 +1,514 @@
-import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence }      from 'framer-motion'
-import { useJournal }                   from '../hooks/useJournal'
-import { formatRomanDate }              from '../utils/dateHelpers'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { motion, AnimatePresence }                   from 'framer-motion'
+import { useJournal }                                from '../hooks/useJournal'
+import { useIsMobile }                               from '../hooks/useIsMobile'
 
-const INTENSITY_LABELS = ['', 'I', 'II', 'III', 'IV', 'V']
+/* ── Stable today string (module-level so it never changes within a session) ── */
+const today = new Date().toISOString().slice(0, 10)
 
-const EMPTY_FORM = {
-  intensity:  3,
-  victories:  '',
-  lessons:    '',
-  tomorrow:   '',
-  reflection: '',
-}
-
-const SECTIONS = [
-  { key: 'victories',  label: 'Victories',  placeholder: 'What did you conquer today? Every advance, no matter how small...' },
-  { key: 'lessons',    label: 'Lessons',    placeholder: 'What did today teach you? What would you do differently...' },
-  { key: 'tomorrow',   label: 'Tomorrow',   placeholder: 'What three things must be done tomorrow, without fail...' },
-  { key: 'reflection', label: 'Reflection', placeholder: 'Speak freely. This space is yours alone...' },
+const INTENSITY_OPTIONS = [
+  { value: 1, label: 'I',   desc: 'Quiet'   },
+  { value: 2, label: 'II',  desc: 'Steady'  },
+  { value: 3, label: 'III', desc: 'Focused' },
+  { value: 4, label: 'IV',  desc: 'Intense' },
+  { value: 5, label: 'V',   desc: 'Maximum' },
 ]
 
+const PROMPTS = [
+  { key: 'victories',  label: 'VICTORIES',  icon: '⚔',  placeholder: 'What did you conquer today? Every advance, no matter how small.' },
+  { key: 'lessons',    label: 'LESSONS',    icon: '📖', placeholder: 'What did today teach you? What would you do differently?' },
+  { key: 'tomorrow',   label: 'TOMORROW',   icon: '🎯', placeholder: 'What three things must be done tomorrow, without fail?' },
+  { key: 'reflection', label: 'REFLECTION', icon: '🔮', placeholder: 'Speak freely. This space is yours alone.' },
+]
+
+const EMPTY = { intensity: 3, victories: '', lessons: '', tomorrow: '', reflection: '' }
+
+/* ── Shared text style helpers ── */
+const cinzel   = { fontFamily: 'Cinzel, serif' }
+const garamond = { fontFamily: 'Cormorant Garamond, serif' }
+const ebGara   = { fontFamily: 'EB Garamond, serif' }
+const mono     = { fontFamily: 'JetBrains Mono, monospace' }
+
 export default function JournalPage() {
-  const { entries, loading, saveEntry, deleteEntry, getTodayEntry } = useJournal()
+  const { entries, loading, saveEntry, deleteEntry, journalStreak } = useJournal()
+  const isMobile = useIsMobile()
 
-  const [tab,           setTab]           = useState('today')
-  const [form,          setForm]          = useState(EMPTY_FORM)
-  const [savedStatus,   setSavedStatus]   = useState('idle')   // idle | saving | saved | error
-  const [selectedEntry, setSelectedEntry] = useState(null)
+  const [view,          setView]          = useState('write')   // 'write' | 'history'
+  const [form,          setForm]          = useState(EMPTY)
+  const [status,        setStatus]        = useState('idle')    // idle | saving | saved | error
+  const [expandedEntry, setExpandedEntry] = useState(null)
+  const [activeSection, setActiveSection] = useState('victories')
 
-  const today        = new Date().toISOString().slice(0, 10)
-  const formLoaded   = useRef(false)
-  const autoSaveTimer = useRef(null)
-  const hasUserTyped  = useRef(false)
+  const hasTyped   = useRef(false)
+  const saveTimer  = useRef(null)
 
-  /* ── Load today's entry into form once Supabase data arrives ── */
+  /* ── Load today's entry once Supabase data arrives, but only if the user
+        hasn't started typing yet (avoid clobbering unsaved work) ── */
   useEffect(() => {
-    if (loading || formLoaded.current) return
-    const existing = getTodayEntry()
+    if (loading || hasTyped.current) return
+    const existing = entries.find((e) => e.entry_date === today)
     if (existing) {
       setForm({
-        intensity:  existing.intensity  || 3,
-        victories:  existing.victories  || '',
-        lessons:    existing.lessons    || '',
-        tomorrow:   existing.tomorrow   || '',
-        reflection: existing.reflection || '',
+        intensity:  existing.intensity  ?? 3,
+        victories:  existing.victories  ?? '',
+        lessons:    existing.lessons    ?? '',
+        tomorrow:   existing.tomorrow   ?? '',
+        reflection: existing.reflection ?? '',
       })
     }
-    formLoaded.current = true
-  }, [entries, loading]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [entries, loading])
 
-  /* ── Auto-save — only after user has typed something ── */
-  useEffect(() => {
-    if (!hasUserTyped.current) return
-    clearTimeout(autoSaveTimer.current)
-    autoSaveTimer.current = setTimeout(() => { handleSave(false) }, 4000)
-    return () => clearTimeout(autoSaveTimer.current)
-  }, [form]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleChange = (key) => (e) => {
-    hasUserTyped.current = true
-    setForm((prev) => ({ ...prev, [key]: e.target.value }))
-  }
-
-  const handleIntensity = (v) => {
-    hasUserTyped.current = true
-    setForm((prev) => ({ ...prev, intensity: v }))
-  }
-
-  const handleSave = async (showFeedback = true) => {
-    setSavedStatus('saving')
-    const success = await saveEntry({ date: today, ...form })
-    if (success) {
-      /* Reset so the form can reload from Supabase on the next fetch cycle */
-      hasUserTyped.current  = false
-      formLoaded.current    = false
-      setForm(EMPTY_FORM)
+  /* ── Save to Supabase ── */
+  const doSave = useCallback(async () => {
+    setStatus('saving')
+    try {
+      const success = await saveEntry({ date: today, ...form })
+      if (success) {
+        setStatus('saved')
+        setTimeout(() => setStatus('idle'), 2000)
+      } else {
+        setStatus('error')
+        setTimeout(() => setStatus('idle'), 3000)
+      }
+    } catch {
+      setStatus('error')
+      setTimeout(() => setStatus('idle'), 3000)
     }
-    setSavedStatus(success ? 'saved' : 'error')
-    if (showFeedback) setTimeout(() => setSavedStatus('idle'), 2500)
-    else              setTimeout(() => setSavedStatus('idle'), 1000)
+  }, [form, saveEntry])
+
+  /* ── Update form field + schedule auto-save ── */
+  const handleChange = (key, value) => {
+    hasTyped.current = true
+    setForm((p) => ({ ...p, [key]: value }))
+    clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(doSave, 3000)
+  }
+
+  const handleManualSave = async () => {
+    clearTimeout(saveTimer.current)
+    await doSave()
   }
 
   const handleDelete = async (entryDate) => {
     await deleteEntry(entryDate)
-    setSelectedEntry(null)
+    setExpandedEntry(null)
   }
 
+  /* ── Derived data ── */
   const past = entries
     .filter((e) => e.entry_date !== today)
     .sort((a, b) => b.entry_date.localeCompare(a.entry_date))
 
-  if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '40vh', fontFamily: 'Cinzel', fontSize: '11px', letterSpacing: '0.3em', color: 'var(--faint)' }}>
-      — loading —
-    </div>
-  )
+  const todayWordCount = Object.values(form)
+    .filter((v) => typeof v === 'string')
+    .join(' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length
 
+  /* ── Loading state ── */
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
+        <p style={{ ...cinzel, fontSize: '11px', letterSpacing: '0.3em', color: 'var(--faint)' }}>
+          — loading —
+        </p>
+      </div>
+    )
+  }
+
+  /* ────────────────────────────────────────────
+     RENDER
+  ──────────────────────────────────────────── */
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.35 }}
+      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       className="page-container"
-      style={{ maxWidth: 760, margin: '0 auto' }}
+      style={{ maxWidth: 780, margin: '0 auto' }}
     >
-      {/* ── Header ── */}
-      <div className="mb-8">
-        <p className="font-cinzel uppercase" style={{ fontSize: '10px', color: 'var(--bronze)', letterSpacing: '0.22em', marginBottom: 4 }}>
-          Acta Diurna
-        </p>
-        <p className="font-cormorant" style={{ fontSize: '28px', color: 'var(--text)', fontWeight: 600 }}>
-          Daily Journal
-        </p>
+
+      {/* ══════════════ TOP BAR ══════════════ */}
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 32 }}>
+        <div>
+          <p style={{ ...cinzel, fontSize: '10px', color: 'var(--bronze)', letterSpacing: '0.22em', textTransform: 'uppercase', marginBottom: 6 }}>
+            Acta Diurna
+          </p>
+          <h1 style={{ ...garamond, fontSize: isMobile ? '26px' : '32px', fontWeight: 700, color: 'var(--text)', lineHeight: 1 }}>
+            Field Journal
+          </h1>
+        </div>
+
+        {/* Streak */}
+        <div style={{ textAlign: 'right' }}>
+          <p style={{ ...mono, fontSize: isMobile ? '22px' : '28px', color: 'var(--gold)', lineHeight: 1 }}>
+            {journalStreak}
+          </p>
+          <p style={{ ...cinzel, fontSize: '9px', color: 'var(--muted)', letterSpacing: '0.15em', textTransform: 'uppercase', marginTop: 4 }}>
+            Day Streak
+          </p>
+        </div>
       </div>
 
-      {/* ── Tabs ── */}
-      <div className="flex gap-6 mb-8" style={{ borderBottom: '1px solid var(--divider)' }}>
-        {[{ id: 'today', label: "Today's Entry" }, { id: 'past', label: 'Past Entries' }].map((t) => (
+      {/* ══════════════ VIEW TOGGLE ══════════════ */}
+      <div style={{ display: 'flex', gap: 0, marginBottom: 40, borderBottom: '1px solid var(--divider)' }}>
+        {[
+          { id: 'write',   label: 'Write Today'          },
+          { id: 'history', label: `History (${past.length})` },
+        ].map((v) => (
           <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className="font-cinzel uppercase transition-colors"
+            key={v.id}
+            onClick={() => setView(v.id)}
             style={{
+              ...cinzel,
               fontSize:      '10px',
-              letterSpacing: '0.2em',
-              color:         tab === t.id ? 'var(--gold)' : 'var(--faint)',
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color:         view === v.id ? 'var(--gold)' : 'var(--faint)',
               paddingBottom: 12,
-              borderBottom:  tab === t.id ? '1px solid var(--gold)' : '1px solid transparent',
+              paddingRight:  32,
+              background:    'transparent',
+              border:        'none',
+              borderBottom:  view === v.id ? '1px solid var(--gold)' : '1px solid transparent',
+              cursor:        'pointer',
+              marginBottom:  -1,
             }}
           >
-            {t.label}
+            {v.label}
           </button>
         ))}
       </div>
 
       <AnimatePresence mode="wait">
 
-        {/* ══ TODAY TAB ══ */}
-        {tab === 'today' && (
-          <motion.div key="today" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+        {/* ══════════════════════════════════════
+            WRITE VIEW
+        ══════════════════════════════════════ */}
+        {view === 'write' && (
+          <motion.div key="write" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
 
-            {/* Date + save status */}
-            <div className="flex items-baseline justify-between mb-8">
-              <p className="font-cinzel uppercase" style={{ fontSize: '13px', color: 'var(--gold)', letterSpacing: '0.3em' }}>
-                {formatRomanDate(new Date())}
-              </p>
-              <p
-                className="font-mono italic"
-                style={{
-                  fontSize:   '10px',
-                  color:      savedStatus === 'error' ? '#8B3A3A' : 'var(--faint)',
-                  opacity:    savedStatus === 'idle' ? 0 : 1,
+            {/* Date · word count · save controls */}
+            <div style={{
+              display:        'flex',
+              alignItems:     isMobile ? 'flex-start' : 'center',
+              justifyContent: 'space-between',
+              flexDirection:  isMobile ? 'column' : 'row',
+              gap:            isMobile ? 16 : 0,
+              marginBottom:   32,
+            }}>
+              <div>
+                <p style={{ ...cinzel, fontSize: '13px', color: 'var(--gold)', letterSpacing: '0.3em', textTransform: 'uppercase' }}>
+                  {new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+                <p style={{ ...mono, fontSize: '10px', color: 'var(--faint)', marginTop: 4 }}>
+                  {todayWordCount} words
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                {/* Save status indicator */}
+                <p style={{
+                  ...cinzel,
+                  fontSize:      '9px',
+                  letterSpacing: '0.15em',
+                  textTransform: 'uppercase',
+                  color:   status === 'saved' ? 'var(--gold)' : status === 'error' ? '#8B3A3A' : 'var(--faint)',
+                  opacity: status === 'idle' ? 0 : 1,
                   transition: 'opacity 0.3s',
-                }}
-              >
-                {savedStatus === 'saving' ? '— saving —' : savedStatus === 'saved' ? '— saved —' : savedStatus === 'error' ? '— error saving —' : ''}
-              </p>
+                }}>
+                  {status === 'saving' ? '— saving —' : status === 'saved' ? '— committed —' : status === 'error' ? '— failed —' : ''}
+                </p>
+
+                {/* Manual save button */}
+                <button
+                  onClick={handleManualSave}
+                  disabled={status === 'saving'}
+                  style={{
+                    ...cinzel,
+                    fontSize:      '10px',
+                    letterSpacing: '0.15em',
+                    textTransform: 'uppercase',
+                    color:      'var(--gold)',
+                    background: 'transparent',
+                    border:     '1px solid var(--gold)',
+                    padding:    '8px 20px',
+                    cursor:     status === 'saving' ? 'not-allowed' : 'pointer',
+                    opacity:    status === 'saving' ? 0.5 : 1,
+                    transition: 'opacity 0.2s',
+                  }}
+                >
+                  {status === 'saving' ? 'Saving…' : 'Commit'}
+                </button>
+              </div>
             </div>
 
-            {/* Intensity selector */}
-            <div className="mb-10">
-              <p className="section-label" style={{ marginBottom: 12 }}>Intensity of Day</p>
-              <div className="flex gap-3">
-                {[1, 2, 3, 4, 5].map((v) => (
+            {/* ── INTENSITY SELECTOR ── */}
+            <div style={{ marginBottom: 40 }}>
+              <p style={{ ...cinzel, fontSize: '9px', color: 'var(--muted)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 14 }}>
+                Day Intensity
+              </p>
+
+              {/* Desktop: 5 equal columns. Mobile: 2-column grid (wraps naturally) */}
+              <div style={{
+                display:             'grid',
+                gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(5, 1fr)',
+                gap:                 8,
+              }}>
+                {INTENSITY_OPTIONS.map((opt) => (
                   <button
-                    key={v}
-                    onClick={() => handleIntensity(v)}
-                    className="font-cinzel transition-all"
+                    key={opt.value}
+                    onClick={() => handleChange('intensity', opt.value)}
                     style={{
-                      fontSize:      '12px',
-                      letterSpacing: '0.15em',
-                      padding:       '8px 18px',
-                      border:        '1px solid',
-                      borderColor:   form.intensity === v ? 'var(--gold)' : 'var(--border)',
-                      color:         form.intensity === v ? 'var(--bg)'   : 'var(--muted)',
-                      background:    form.intensity === v ? 'var(--gold)' : 'transparent',
+                      padding:     '12px 8px',
+                      background:  form.intensity === opt.value ? 'var(--gold)' : 'transparent',
+                      border:      '1px solid',
+                      borderColor: form.intensity === opt.value ? 'var(--gold)' : 'var(--border)',
+                      cursor:      'pointer',
+                      transition:  'all 0.2s',
                     }}
                   >
-                    {INTENSITY_LABELS[v]}
+                    <p style={{ ...cinzel, fontSize: '13px', color: form.intensity === opt.value ? '#0C0A08' : 'var(--muted)', marginBottom: 4 }}>
+                      {opt.label}
+                    </p>
+                    <p style={{ ...ebGara, fontSize: '11px', color: form.intensity === opt.value ? '#0C0A08' : 'var(--faint)' }}>
+                      {opt.desc}
+                    </p>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Journal sections */}
-            <div className="flex flex-col gap-10">
-              {SECTIONS.map(({ key, label, placeholder }) => (
-                <div key={key}>
-                  <p className="section-label" style={{ marginBottom: 10 }}>{label}</p>
-                  <textarea
-                    value={form[key]}
-                    onChange={handleChange(key)}
-                    placeholder={placeholder}
-                    className="textarea-journal"
-                    rows={key === 'reflection' ? 6 : 4}
-                  />
-                </div>
+            {/* ── SECTION NAVIGATOR ── */}
+            <div style={{
+              display:      'flex',
+              flexWrap:     'wrap',
+              gap:          0,
+              marginBottom: 32,
+              borderBottom: '1px solid var(--divider)',
+            }}>
+              {PROMPTS.map((p) => (
+                <button
+                  key={p.key}
+                  onClick={() => setActiveSection(p.key)}
+                  style={{
+                    ...cinzel,
+                    fontSize:      '9px',
+                    letterSpacing: '0.15em',
+                    textTransform: 'uppercase',
+                    color:         activeSection === p.key ? 'var(--text)' : 'var(--faint)',
+                    paddingBottom: 10,
+                    paddingRight:  isMobile ? 16 : 24,
+                    background:    'transparent',
+                    border:        'none',
+                    borderBottom:  activeSection === p.key ? '1px solid var(--text)' : '1px solid transparent',
+                    cursor:        'pointer',
+                    marginBottom:  -1,
+                  }}
+                >
+                  {p.label}
+                </button>
               ))}
             </div>
 
-            {/* Save button */}
-            <div className="flex justify-end mt-8">
-              <button
-                className="btn-primary"
-                onClick={() => handleSave(true)}
-                disabled={savedStatus === 'saving'}
-                style={{ opacity: savedStatus === 'saving' ? 0.6 : 1 }}
-              >
-                {savedStatus === 'saving' ? 'Saving…' : 'Commit Entry'}
-              </button>
-            </div>
+            {/* ── ACTIVE SECTION TEXTAREA ── */}
+            <AnimatePresence mode="wait">
+              {PROMPTS.map((p) => activeSection === p.key && (
+                <motion.div
+                  key={p.key}
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {/* Prompt / placeholder description */}
+                  <p style={{ ...garamond, fontSize: '14px', fontStyle: 'italic', color: 'var(--muted)', marginBottom: 16, lineHeight: 1.6 }}>
+                    {p.placeholder}
+                  </p>
+
+                  {/* Main writing area */}
+                  <textarea
+                    value={form[p.key]}
+                    onChange={(e) => handleChange(p.key, e.target.value)}
+                    placeholder=""
+                    style={{
+                      ...ebGara,
+                      width:        '100%',
+                      minHeight:    p.key === 'reflection' ? 240 : 180,
+                      background:   'transparent',
+                      border:       'none',
+                      borderBottom: '1px solid var(--divider)',
+                      outline:      'none',
+                      fontSize:     isMobile ? '17px' : '18px',
+                      color:        'var(--text)',
+                      lineHeight:   1.8,
+                      resize:       'none',
+                      padding:      '16px 0',
+                      display:      'block',
+                    }}
+                    onFocus={(e)  => { e.target.style.borderBottomColor = 'var(--gold)' }}
+                    onBlur={(e)   => { e.target.style.borderBottomColor = 'var(--divider)' }}
+                  />
+
+                  {/* ── Section navigation arrows ── */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24 }}>
+                    {PROMPTS.indexOf(p) > 0 ? (
+                      <button
+                        onClick={() => setActiveSection(PROMPTS[PROMPTS.indexOf(p) - 1].key)}
+                        style={{ ...cinzel, fontSize: '9px', letterSpacing: '0.15em', color: 'var(--faint)', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                      >
+                        ← {PROMPTS[PROMPTS.indexOf(p) - 1].label}
+                      </button>
+                    ) : (
+                      <div />
+                    )}
+
+                    {PROMPTS.indexOf(p) < PROMPTS.length - 1 ? (
+                      <button
+                        onClick={() => setActiveSection(PROMPTS[PROMPTS.indexOf(p) + 1].key)}
+                        style={{ ...cinzel, fontSize: '9px', letterSpacing: '0.15em', color: 'var(--gold)', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                      >
+                        {PROMPTS[PROMPTS.indexOf(p) + 1].label} →
+                      </button>
+                    ) : (
+                      /* Last section — show COMMIT ENTRY instead of forward arrow */
+                      <button
+                        onClick={handleManualSave}
+                        style={{ ...cinzel, fontSize: '9px', letterSpacing: '0.15em', color: 'var(--gold)', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                      >
+                        COMMIT ENTRY →
+                      </button>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
 
           </motion.div>
         )}
 
-        {/* ══ PAST ENTRIES TAB ══ */}
-        {tab === 'past' && (
-          <motion.div key="past" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+        {/* ══════════════════════════════════════
+            HISTORY VIEW
+        ══════════════════════════════════════ */}
+        {view === 'history' && (
+          <motion.div key="history" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
 
             {past.length === 0 ? (
-              <p className="font-garamond italic" style={{ color: 'var(--faint)', fontSize: '15px' }}>
-                No past entries yet. Your record begins today.
-              </p>
+              <div style={{ textAlign: 'center', paddingTop: 80 }}>
+                <p style={{ ...garamond, fontSize: '20px', fontStyle: 'italic', color: 'var(--faint)' }}>
+                  No past entries yet.
+                </p>
+                <p style={{ ...ebGara, fontSize: '14px', color: 'var(--faint)', marginTop: 8 }}>
+                  Your record begins today.
+                </p>
+              </div>
             ) : (
-              <div className="flex flex-col">
-                {past.map((entry) => (
-                  <div
+              <div>
+                {past.map((entry, i) => (
+                  <motion.div
                     key={entry.entry_date}
-                    style={{ borderBottom: '1px solid var(--divider)', padding: '20px 0' }}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.04, duration: 0.2 }}
+                    style={{ borderBottom: '1px solid var(--divider)', padding: '24px 0', cursor: 'pointer' }}
+                    onClick={() => setExpandedEntry(expandedEntry === entry.entry_date ? null : entry.entry_date)}
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-cinzel uppercase" style={{ fontSize: '11px', color: 'var(--gold)', letterSpacing: '0.2em', marginBottom: 6 }}>
-                          {formatRomanDate(new Date(entry.entry_date + 'T12:00:00'))}
+                    {/* ── Entry row header ── */}
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        {/* Date + intensity */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8, flexWrap: 'wrap' }}>
+                          <p style={{ ...cinzel, fontSize: '11px', color: 'var(--gold)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+                            {new Date(entry.entry_date + 'T12:00:00').toLocaleDateString('en-US', {
+                              weekday: 'short', day: 'numeric', month: 'long', year: 'numeric',
+                            })}
+                          </p>
                           {entry.intensity && (
-                            <span style={{ color: 'var(--bronze)', marginLeft: 10 }}>
-                              {INTENSITY_LABELS[entry.intensity]}
+                            <span style={{ ...cinzel, fontSize: '9px', color: 'var(--bronze)', letterSpacing: '0.1em' }}>
+                              {'I'.repeat(entry.intensity)}
                             </span>
                           )}
-                        </p>
+                        </div>
+
+                        {/* Victories preview */}
                         {entry.victories && (
-                          <p
-                            className="font-garamond"
-                            style={{ fontSize: '15px', color: 'var(--muted)', lineHeight: 1.65, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}
-                          >
+                          <p style={{
+                            ...ebGara,
+                            fontSize:          '15px',
+                            color:             'var(--muted)',
+                            lineHeight:        1.6,
+                            overflow:          'hidden',
+                            display:           '-webkit-box',
+                            WebkitLineClamp:   2,
+                            WebkitBoxOrient:   'vertical',
+                          }}>
                             {entry.victories}
                           </p>
                         )}
                       </div>
-                      <button
-                        className="btn-ghost"
-                        style={{ fontSize: '9px', flexShrink: 0 }}
-                        onClick={() => setSelectedEntry(entry)}
-                      >
-                        Read
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
 
-            {/* ── Full-entry modal ── */}
-            {selectedEntry && (
-              <div
-                style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.8)', zIndex: 9998, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                onClick={() => setSelectedEntry(null)}
-              >
-                <div
-                  onClick={(e) => e.stopPropagation()}
-                  style={{ background: '#13110E', border: '1px solid var(--border)', padding: 36, width: 560, maxWidth: 'calc(100vw - 40px)', maxHeight: '85vh', overflowY: 'auto', borderRadius: 2 }}
-                >
-                  {/* Modal header */}
-                  <div className="flex items-baseline justify-between mb-8">
-                    <div>
-                      <p className="font-cinzel uppercase" style={{ fontSize: '13px', color: 'var(--gold)', letterSpacing: '0.3em' }}>
-                        {formatRomanDate(new Date(selectedEntry.entry_date + 'T12:00:00'))}
-                      </p>
-                      {selectedEntry.intensity && (
-                        <p className="font-cinzel" style={{ fontSize: '9px', color: 'var(--faint)', letterSpacing: '0.15em', marginTop: 4 }}>
-                          Intensity — {INTENSITY_LABELS[selectedEntry.intensity]}
-                        </p>
+                      {/* READ / CLOSE + delete */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+                        <span style={{ ...cinzel, fontSize: '9px', color: 'var(--faint)', letterSpacing: '0.1em' }}>
+                          {expandedEntry === entry.entry_date ? 'CLOSE' : 'READ'}
+                        </span>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDelete(entry.entry_date) }}
+                          title="Delete entry"
+                          style={{
+                            ...cinzel,
+                            fontSize:   '14px',
+                            color:      'var(--faint)',
+                            background: 'transparent',
+                            border:     'none',
+                            cursor:     'pointer',
+                            lineHeight: 1,
+                            padding:    '0 2px',
+                            transition: 'color 150ms',
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.color = '#8B3A3A' }}
+                          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--faint)' }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* ── Expanded full entry ── */}
+                    <AnimatePresence>
+                      {expandedEntry === entry.entry_date && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                          style={{ overflow: 'hidden', marginTop: 24 }}
+                        >
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 28, paddingTop: 16, borderTop: '1px solid var(--divider)' }}>
+                            {[
+                              { key: 'victories',  label: 'VICTORIES'  },
+                              { key: 'lessons',    label: 'LESSONS'    },
+                              { key: 'tomorrow',   label: 'TOMORROW'   },
+                              { key: 'reflection', label: 'REFLECTION' },
+                            ].map((s) =>
+                              entry[s.key] ? (
+                                <div key={s.key}>
+                                  <p style={{ ...cinzel, fontSize: '9px', color: 'var(--muted)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 10 }}>
+                                    {s.label}
+                                  </p>
+                                  <p style={{ ...ebGara, fontSize: '16px', color: 'var(--text)', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>
+                                    {entry[s.key]}
+                                  </p>
+                                </div>
+                              ) : null
+                            )}
+                          </div>
+                        </motion.div>
                       )}
-                    </div>
-                    <button className="btn-ghost" style={{ fontSize: '9px' }} onClick={() => setSelectedEntry(null)}>
-                      Close
-                    </button>
-                  </div>
-
-                  {/* Modal body */}
-                  <div className="flex flex-col gap-8">
-                    {SECTIONS.map(({ key, label }) =>
-                      selectedEntry[key] ? (
-                        <div key={key}>
-                          <p className="section-label" style={{ marginBottom: 10 }}>{label}</p>
-                          <p className="font-garamond" style={{ fontSize: '16px', color: 'var(--text)', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>
-                            {selectedEntry[key]}
-                          </p>
-                        </div>
-                      ) : null
-                    )}
-                  </div>
-
-                  {/* Modal footer */}
-                  <div className="flex justify-between items-center" style={{ marginTop: 36, paddingTop: 24, borderTop: '1px solid var(--divider)' }}>
-                    <button className="btn-danger" onClick={() => handleDelete(selectedEntry.entry_date)}>
-                      Delete Entry
-                    </button>
-                    <button className="btn-ghost" style={{ fontSize: '9px' }} onClick={() => setSelectedEntry(null)}>
-                      Close
-                    </button>
-                  </div>
-                </div>
+                    </AnimatePresence>
+                  </motion.div>
+                ))}
               </div>
             )}
 
