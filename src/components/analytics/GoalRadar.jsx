@@ -24,49 +24,39 @@ const CustomTooltip = ({ active, payload }) => {
   )
 }
 
-const SHORT_LABELS = {
-  'AIR 1 in CBSE Class 10 Boards':           'Academic',
-  'Generate Independent Freelance Income':     'Business',
-  'Body Recomposition (120g+ protein daily)': 'Health',
-  'Daily Spiritual Practice':                  'Spiritual',
-  'MMA Training — Footwork & Striking':       'Combat',
-  'Project Arête — Character Transformation': 'Self',
-}
-
 export default function GoalRadar() {
   const { goals }  = useApp()
   const isMobile   = useIsMobile()
 
-  const data = goals.map((g) => ({
-    subject:  SHORT_LABELS[g.title] || g.category,
-    value:    g.progress,
-    fullMark: 100,
-  }))
+  const radarData = [
+    { subject: 'Academic',  value: goals.find((g) => g.category === 'Academic')?.progress  ?? 0, fullMark: 100 },
+    { subject: 'Business',  value: goals.find((g) => g.category === 'Business')?.progress  ?? 0, fullMark: 100 },
+    { subject: 'Health',    value: goals.find((g) => g.category === 'Health')?.progress    ?? 0, fullMark: 100 },
+    { subject: 'Spiritual', value: goals.find((g) => g.category === 'Spiritual')?.progress ?? 0, fullMark: 100 },
+    { subject: 'Combat',    value: goals.find((g) => g.category === 'Combat')?.progress    ?? 0, fullMark: 100 },
+    { subject: 'Self',      value: goals.find((g) => g.category === 'Self')?.progress      ?? 0, fullMark: 100 },
+  ]
 
   return (
-    <ResponsiveContainer width="100%" height={isMobile ? 180 : 240}>
-      <RadarChart data={data} margin={{ top: 10, right: 40, bottom: 10, left: 40 }}>
-        <PolarGrid
-          stroke="var(--divider)"
-          strokeWidth={1}
-          gridType="polygon"
-        />
+    <ResponsiveContainer width="100%" height={isMobile ? 200 : 260}>
+      <RadarChart data={radarData} margin={{ top: 10, right: 30, bottom: 10, left: 30 }}>
+        <PolarGrid stroke="#2A2520" />
         <PolarAngleAxis
           dataKey="subject"
           tick={{
-            fill:        'var(--faint)',
-            fontSize:    10,
-            fontFamily:  '"Cinzel", serif',
-            letterSpacing: '0.06em',
+            fill:          '#A89880',
+            fontSize:      11,
+            fontFamily:    'Cinzel, serif',
+            letterSpacing: '0.1em',
           }}
         />
         <Tooltip content={<CustomTooltip />} />
         <Radar
           name="Progress"
           dataKey="value"
-          stroke="var(--gold)"
-          fill="var(--gold)"
-          fillOpacity={0.06}
+          stroke="#C9A84C"
+          fill="#C9A84C"
+          fillOpacity={0.08}
           strokeWidth={1}
         />
       </RadarChart>

@@ -155,7 +155,7 @@ function StreakLeaderboard({ habits, getHabitStreak }) {
 export default function AnalyticsPage() {
   const isMobile = useIsMobile()
   const {
-    tasks, notes, goals, habits,
+    tasks, notes, goals, habits, todayScore,
     getPerfectDays, getWeeklyCompletionData, getHabitStreak,
   } = useApp()
 
@@ -174,6 +174,7 @@ export default function AnalyticsPage() {
     { label: 'Longest Streak',  value: `${longestStreak}d` },
     { label: 'Total Notes',     value: notes.length },
     { label: 'Goals 50%+',      value: goalsAbove50 },
+    { label: "Today's Score",   value: todayScore, suffix: '%' },
   ]
 
   return (
@@ -195,15 +196,16 @@ export default function AnalyticsPage() {
         className="mb-8"
         style={{
           display:             'grid',
-          gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)',
+          gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(5, 1fr)',
           border:              '1px solid var(--border)',
           background:          'var(--surface)',
         }}
       >
         {summaryStats.map((stat, i) => {
-          const isLastRow     = isMobile ? i >= 2 : false
-          const isLastCol     = isMobile ? i % 2 === 1 : i === summaryStats.length - 1
-          const isFirstInRow  = isMobile ? i % 2 === 0 : false
+          const cols       = isMobile ? 2 : summaryStats.length
+          const lastRowStart = summaryStats.length - (summaryStats.length % cols === 0 ? cols : summaryStats.length % cols)
+          const isLastRow  = isMobile ? i >= lastRowStart : false
+          const isLastCol  = (i + 1) % cols === 0 || i === summaryStats.length - 1
           return (
             <div
               key={stat.label}
@@ -216,7 +218,7 @@ export default function AnalyticsPage() {
               }}
             >
               <p className="font-mono" style={{ fontSize: isMobile ? '28px' : '36px', color: 'var(--gold)', lineHeight: 1 }}>
-                <AnimatedStat value={stat.value} />
+                <AnimatedStat value={stat.value} />{stat.suffix ?? ''}
               </p>
               <p className="font-cinzel uppercase" style={{ fontSize: '11px', color: 'var(--muted)', letterSpacing: '0.2em', marginTop: 6, textAlign: 'center' }}>
                 {stat.label}
