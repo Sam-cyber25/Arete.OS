@@ -26,18 +26,8 @@ export function useStickyNotes() {
   }
 
   const seedDefaults = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    const defaults = [
-      { title: 'Close Menon Follow-Up', content: 'Call Papa to inform institute. Discuss SEO upsell and subpages.', priority: 'HIGH', tags: ['kairos', 'client'], pinned: true  },
-      { title: 'AI Agents Module 2',    content: 'Groq API integration. Set up n8n workflow for local business demo.',  priority: 'MID', tags: ['ai', 'learning'],  pinned: false },
-      { title: 'LootSpec Content',      content: 'Post schedule for next week. Reel ideas: PC build timelapse, mod showcase.', priority: 'LOW', tags: ['lootspec'], pinned: false },
-    ]
-    const { data, error } = await supabase
-      .from('sticky_notes')
-      .insert(defaults.map((n) => ({ ...n, user_id: user.id })))
-      .select()
-    if (!error && data) setNotes(data)
+    // No default notes — start with an empty board
+    setNotes([])
   }
 
   const addNote = async ({ title, content, priority, tags = [] }) => {
@@ -76,5 +66,17 @@ export function useStickyNotes() {
     await updateNote(id, { pinned: !note.pinned })
   }
 
-  return { notes, loading, addNote, updateNote, deleteNote, togglePin, refetch: fetchNotes }
+  const movePriority = async (id, direction) => {
+    const note = notes.find((n) => n.id === id)
+    if (!note) return
+    const order = ['LOW', 'MID', 'HIGH']
+    const currentIndex = order.indexOf(note.priority)
+    const newIndex = direction === 'up'
+      ? Math.min(currentIndex + 1, 2)
+      : Math.max(currentIndex - 1, 0)
+    if (newIndex === currentIndex) return
+    await updateNote(id, { priority: order[newIndex] })
+  }
+
+  return { notes, loading, addNote, updateNote, deleteNote, togglePin, movePriority, refetch: fetchNotes }
 }

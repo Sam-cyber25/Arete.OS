@@ -117,7 +117,7 @@ function EditableField({ value, onChange, placeholder, multiline, className, sty
 /* ─────────────────────────────────────────────
    Note card
 ───────────────────────────────────────────── */
-function NoteCard({ note, onUpdate, onDelete, onTogglePin, onTagClick }) {
+function NoteCard({ note, onUpdate, onDelete, onTogglePin, onTagClick, onMovePriority }) {
   const [hovered, setHovered] = useState(false)
   const meta = META[note.priority] || META.LOW
   const tags = Array.isArray(note.tags) ? note.tags : []
@@ -176,6 +176,22 @@ function NoteCard({ note, onUpdate, onDelete, onTogglePin, onTagClick }) {
             >
               ◆
             </motion.button>
+
+            <button
+              onClick={() => onMovePriority(note.id, 'up')}
+              title="Increase priority"
+              style={{ fontSize: '10px', color: 'var(--faint)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px 2px', lineHeight: 1 }}
+            >
+              ↑
+            </button>
+
+            <button
+              onClick={() => onMovePriority(note.id, 'down')}
+              title="Decrease priority"
+              style={{ fontSize: '10px', color: 'var(--faint)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px 2px', lineHeight: 1 }}
+            >
+              ↓
+            </button>
 
             <button
               onClick={() => onDelete(note.id)}
@@ -384,7 +400,7 @@ function AddNoteForm({ priority, onAdd, onClose }) {
 /* ─────────────────────────────────────────────
    Desktop column
 ───────────────────────────────────────────── */
-function Column({ priority, notes, onAdd, onUpdate, onDelete, onTogglePin, onTagClick, isLast }) {
+function Column({ priority, notes, onAdd, onUpdate, onDelete, onTogglePin, onTagClick, onMovePriority, isLast }) {
   const meta    = META[priority]
   const [adding, setAdding] = useState(false)
 
@@ -454,7 +470,7 @@ function Column({ priority, notes, onAdd, onUpdate, onDelete, onTogglePin, onTag
               className="font-cormorant italic"
               style={{ fontSize: '15px', color: 'var(--faint)', textAlign: 'center', marginTop: 32 }}
             >
-              No {priority.toLowerCase()} notes.
+              No notes yet. Click + to add one.
             </motion.p>
           )}
           {sorted.map((note) => (
@@ -465,6 +481,7 @@ function Column({ priority, notes, onAdd, onUpdate, onDelete, onTogglePin, onTag
               onDelete={onDelete}
               onTogglePin={onTogglePin}
               onTagClick={onTagClick}
+              onMovePriority={onMovePriority}
             />
           ))}
         </AnimatePresence>
@@ -477,7 +494,7 @@ function Column({ priority, notes, onAdd, onUpdate, onDelete, onTogglePin, onTag
    Main page
 ───────────────────────────────────────────── */
 export default function StickyNotesPage() {
-  const { notes, loading, addNote, updateNote, deleteNote, togglePin } = useStickyNotes()
+  const { notes, loading, addNote, updateNote, deleteNote, togglePin, movePriority } = useStickyNotes()
   const isMobile = useIsMobile()
 
   const [search,          setSearch]          = useState('')
@@ -640,7 +657,7 @@ export default function StickyNotesPage() {
                 className="font-cormorant italic"
                 style={{ fontSize: '15px', color: 'var(--faint)', textAlign: 'center', marginTop: 32 }}
               >
-                No {activeMobileTab.toLowerCase()} notes.
+                No notes yet. Click + to add one.
               </motion.p>
             )}
             {filtered
@@ -657,6 +674,7 @@ export default function StickyNotesPage() {
                   onDelete={deleteNote}
                   onTogglePin={togglePin}
                   onTagClick={handleTagClick}
+                  onMovePriority={movePriority}
                 />
               ))
             }
@@ -681,6 +699,7 @@ export default function StickyNotesPage() {
               onDelete={deleteNote}
               onTogglePin={togglePin}
               onTagClick={handleTagClick}
+              onMovePriority={movePriority}
               isLast={idx === PRIORITIES.length - 1}
             />
           ))}
