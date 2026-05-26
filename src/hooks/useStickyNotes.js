@@ -1,18 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase }            from '../lib/supabase'
-
-/*
- * DB schema: id, user_id, title, content, priority, tags(jsonb), pinned(bool), created_at
- * This hook stores raw DB rows — no UI field mapping needed.
- * Components access DB column names directly (title, content, priority, pinned, created_at).
- * Priority values: 'HIGH' | 'MID' | 'LOW'
- */
-
-const DEFAULT_NOTES = [
-  { title: 'Close Menon Follow-Up', content: 'Call Papa to inform institute. Discuss SEO upsell and subpages.', priority: 'HIGH', tags: [], pinned: false },
-  { title: 'AI Agents Module 2',    content: 'Groq API integration. Set up n8n workflow for local business demo.',  priority: 'MID', tags: [], pinned: false },
-  { title: 'LootSpec Content',      content: 'Post schedule for next week. Reel ideas: PC build timelapse, mod showcase.', priority: 'LOW', tags: [], pinned: false },
-]
+import { supabase } from '../lib/supabase'
 
 export function useStickyNotes() {
   const [notes,   setNotes]   = useState([])
@@ -25,45 +12,46 @@ export function useStickyNotes() {
     const { data, error } = await supabase
       .from('sticky_notes')
       .select('*')
+      .order('pinned',     { ascending: false })
       .order('created_at', { ascending: false })
 
-    if (error) {
-      console.error('Fetch sticky notes error:', error)
-      setLoading(false)
-      return
-    }
+    if (error) { console.error(error); setLoading(false); return }
 
     if ((data || []).length === 0) {
-      await seedNotes()
+      await seedDefaults()
     } else {
       setNotes(data)
     }
     setLoading(false)
   }
 
-  const seedNotes = async () => {
+  const seedDefaults = async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
+    const defaults = [
+      { title: 'Close Menon Follow-Up', content: 'Call Papa to inform institute. Discuss SEO upsell and subpages.', priority: 'HIGH', tags: ['kairos', 'client'], pinned: true  },
+      { title: 'AI Agents Module 2',    content: 'Groq API integration. Set up n8n workflow for local business demo.',  priority: 'MID', tags: ['ai', 'learning'],  pinned: false },
+      { title: 'LootSpec Content',      content: 'Post schedule for next week. Reel ideas: PC build timelapse, mod showcase.', priority: 'LOW', tags: ['lootspec'], pinned: false },
+    ]
     const { data, error } = await supabase
       .from('sticky_notes')
-      .insert(DEFAULT_NOTES.map((n) => ({ ...n, user_id: user.id })))
+      .insert(defaults.map((n) => ({ ...n, user_id: user.id })))
       .select()
     if (!error && data) setNotes(data)
   }
 
-  const addNote = async ({ title, content, priority }) => {
+  const addNote = async ({ title, content, priority, tags = [] }) => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
     const { data, error } = await supabase
       .from('sticky_notes')
-      .insert({ title, content, priority, user_id: user.id, tags: [], pinned: false })
+      .insert({ title, content, priority, tags, pinned: false, user_id: user.id })
       .select()
       .single()
     if (!error && data) setNotes((prev) => [data, ...prev])
   }
 
   const updateNote = async (id, updates) => {
-    /* updates must use DB column names: title, content, priority, pinned, tags */
     const { data, error } = await supabase
       .from('sticky_notes')
       .update(updates)
@@ -74,17 +62,11 @@ export function useStickyNotes() {
   }
 
   const deleteNote = async (id) => {
-    /* Guard: id must be a UUID, not a legacy client-side string like 'sn1' */
-    if (!id || typeof id !== 'string' || /^[a-zA-Z][\w-]*\d+$/.test(id)) {
-      console.error('Invalid sticky note ID — not a UUID:', id)
-      return
-    }
     const { error } = await supabase
       .from('sticky_notes')
       .delete()
       .eq('id', id)
-    if (error) { console.error('Delete sticky error:', error); return }
-    /* Only remove from local state after confirmed Supabase delete */
+    if (error) { console.error('Delete error:', error); return }
     setNotes((prev) => prev.filter((n) => n.id !== id))
   }
 
@@ -94,11 +76,5 @@ export function useStickyNotes() {
     await updateNote(id, { pinned: !note.pinned })
   }
 
-  /* Returns notes for a given priority, pinned first */
-  const byPriority = (priority) =>
-    notes
-      .filter((n) => n.priority === priority)
-      .sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0))
-
-  return { notes, loading, addNote, updateNote, deleteNote, togglePin, byPriority, refetch: fetchNotes }
+  return { notes, loading, addNote, updateNote, deleteNote, togglePin, refetch: fetchNotes }
 }
